@@ -16,4 +16,12 @@ BALANCE easy accuracy= 1 wins= 200 /200 avgWinnerHouse= 14.6
 BALANCE easy accuracy= 0.7 wins= 200 /200 avgWinnerHouse= 13.9
 BALANCE nightmare accuracy= 1 wins= 200 /200 avgWinnerHouse= 12.0
 BALANCE nightmare accuracy= 0.7 wins= 195 /200 avgWinnerHouse= 11.1
-Passed 14 engine test suites.
+PASS version 1 saves upgrade without resetting seed, progress or wolves
+PASS defense catalogue has four distinct non-lethal equipment types
+PASS ice cream net consumes wood and coins, blocks two attack turns
+PASS sling towers have two levels and repel by courage before the attack
+PASS alarm stuns for two turns and enters a three-turn cooldown
+PASS equipment costs and capacity limits enforce no partial transaction
+PASS per-ring structures do not automatically work on the neighboring ring
+PASS non-lethal tower never damages or shoots a transformed Chihuahua
+Passed 22 engine test suites.

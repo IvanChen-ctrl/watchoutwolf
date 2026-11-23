@@ -2,7 +2,7 @@
   "id": "./",
   "name": "算数不好，狼就会来！— 狼来了·算数防线",
   "short_name": "狼来了·算数",
-  "description": "三层防线守小屋；数学买材料，命运骰换手电筒，狼变吉娃娃。",
+  "description": "双画风数学塔防：三圈防线、黏网、弹弓哨塔与警报铃；命运骰换手电筒，狼变吉娃娃。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

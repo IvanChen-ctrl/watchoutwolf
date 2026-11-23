@@ -1,22 +1,25 @@
-# WatchOutWolf v1.1 regression report
+# WatchOutWolf v1.2.0 · 回归质量报告
 
-## Completed local tests
+## 本轮新增测试
 
-- `node tests/test_engine.cjs`: **14 suites passed**, including all six dice faces, deterministic seeded outcomes, flashlight retreat, target-selection guard, forest-boundary trap, math options, complete game states, and optional recovery.
-- `python3 tests/test_browser.py`: Chromium touchscreen smoke **passed** for 390px and 320px viewports, deliberate wrong answer -> dice skip -> next round, four correct answers, quick flashlight target selection with stale earlier target, exactly-one-ring Chihuahua retreat, no JavaScript errors, and no horizontal overflow.
-- `python3 tools/build_onefile.py`: generated self-contained `web/play.html` (no CDN assets). `python3 tools/sync_web.py`: copied matching game files to Android WebView assets.
-- Deterministic 200-seed balance simulations: easy 100%-answer wins 200/200 and 70%-answer wins 200/200; nightmare 100% wins 200/200 and 70% wins 195/200. This is a relatively forgiving strategy game, not a high-difficulty survival simulation.
+- `node tests/test_engine.cjs`：**22 组规则测试通过**（旧版 14 组 + v1.2 新增 8 组）。
+- 新增覆盖旧版存档无损迁移、全部四种装备存在性、冰淇淋黏网连续两次免受攻击、二级哨塔的攻击/胆量归零劝退、警报铃 3 回合冷却、资源及容量边界、各圈装备隔离、吉娃娃不会被哨塔射击。
+- `python3 tests/test_browser.py`：**6 组 Chromium 触屏流程检查通过**。测试 390px 与 320px 竖屏，包含错题跳过、手电精准照狼、吉娃娃向外退一圈、两套画风无损切换、建造哨塔+黏网、武器真实开火和 Canvas 运行时异常检查。
+- `python3 tests/preview_v12.py`：生成桌面和开场视觉证据，浏览器无 JS 异常。
+- `web/play.html`：由最新 html/js/css 直接内嵌构建，外部 CDN/接口依赖为零。
+- 规则平衡模拟：原 800 场策略模拟保留，未改变原难度数值；新防御只作为玩家主动购买的追加策略。
 
-## Fixed in v1.1
+## 修复与防回归
 
-1. Quick flashlight action no longer targets a stale selection from a previous wolf card.
-2. Roulette wheel labels align with their actual sectors and results are saved when cast, before the animation finishes.
-3. A first-ring trap sends the wolf into the forest, where it leaves instead of silently returning.
-4. PWA navigation uses network-first / cache fallback with versioned offline cache.
-5. Android app `versionCode` 2 / `versionName` 1.1.0; CI invokes Node regression tests before APK compilation.
+1. 原 v1.1 旧存档不具备装备字段：新增 `migrateSave`，不改变当时的种子/回合/资源。
+2. 画风按钮的点击代理只监听 `button[data-style]`，避免与 `body[data-style]` 冲突（实测发现并修复）。
+3. 物理层次：三个防御环仍单独选中，陷阱只作用对应圈，塔对目标按攻击危险度自动选取。
+4. 事件实时可视化：弧形石子轨迹、警报圈、黏网格、弹簧冲击；画风不同而规则不变。
+5. 手电“狼变吉娃娃 → 自动后退一层”机制保留，且新防御不会伤害吉娃娃。
+6. 短剧模式单条专用字幕，避免双层字幕、故事时间线维持“女儿先在外婆家 / 孙子携一台掌机后到 / 丑娘藏床底 / 冰淇淋来自女儿”的设定。
 
-## Verification still required
+## 剩余需实机验收
 
-- Android APK compilation on an Android SDK enabled machine/GitHub Actions (container has no SDK, Gradle or outbound download access).
-- Install/launch/sound/rotation/save/restore on an actual Android handset.
-- Safari PWA install and offline cache on a physical iPhone.
+- 在 Android 实机安装 v1.2 APK 并验证屏幕旋转、流畅度、音效、触控与断电后恢复。
+- 在真实 iPhone Safari 测试 GitHub Pages PWA 安装、离线缓存、横竖屏。
+- 该短剧画风属于游戏化 2.5D 二次绘制，未导入原剧 3D 模型，因此人物不保证像素级一致。

@@ -68,6 +68,54 @@ def run():
         dims = page.evaluate('({scroll:document.documentElement.scrollWidth, width:innerWidth})')
         assert dims['scroll'] <= dims['width'] + 1, dims
         print('PASS 320px mobile layout: no horizontal overflow / JS exceptions')
+
+        # Both art directions share the exact same game state and saved progress.
+        frozen = save()
+        page.locator('.style-toolbar button[data-style="drama"]').click()
+        assert page.evaluate('document.body.dataset.style') == 'drama'
+        assert page.evaluate('window.WolfMathDebug.getVisualStyle()') == 'drama'
+        assert save() == frozen
+        assert page.locator('.scene-caption').is_visible()
+        assert page.locator('.style-toolbar button[data-style="drama"]').get_attribute('aria-pressed') == 'true'
+        page.wait_for_timeout(210)
+        dims = page.evaluate('({scroll:document.documentElement.scrollWidth,width:innerWidth})')
+        assert dims['scroll'] <= dims['width'] + 1, dims
+        page.screenshot(path=str(ROOT / 'qa_drama_mobile_v12.png'))
+        page.locator('.style-toolbar button[data-style="classic"]').click()
+        assert save() == frozen
+        assert page.evaluate('document.body.dataset.style') == 'classic'
+        assert not page.locator('.scene-caption').is_visible()
+        page.screenshot(path=str(ROOT / 'qa_classic_mobile_v12.png'))
+        print('PASS dual-style swap retains same state, progress, and 320px viewport')
+
+        # New trap/weapon buttons have real, capped, resource-checked effects.
+        page.evaluate('''() => {
+          const state = window.WolfMathDebug.getState();
+          state.coins=30;state.wood=30;state.stone=30;state.actions=2;state.selectedRing=1;
+          window.WolfMathDebug.setState(state);
+        }''')
+        page.locator('[data-action="tower"]').click()
+        assert save()['towers'][1] == 1 and save()['actions'] == 1
+        page.locator('[data-action="net"]').click()
+        assert save()['nets'][1] == 1 and save()['actions'] == 0
+        assert page.locator('.ring-button[data-ring="1"] .ring-arsenal').count() == 1
+        assert not errors, errors
+        print('PASS construction UI: buy tower + net, ring isolation, action accounting')
+        page.evaluate('''() => {
+          const state=window.WolfMathDebug.getState();
+          state.wolves=state.wolves.slice(0,1);
+          state.wolves[0].ring=2;
+          state.wolves[0].stunned=0;
+          state.wolves[0].kind='wolf';
+          state.wolves[0].courage=3;
+          state.wolves[0].maxCourage=3;
+          window.WolfMathDebug.setState(state);
+        }''')
+        page.locator('[data-action="endturn"]').click()
+        page.wait_for_timeout(200)
+        assert save()['defenseStats']['shots'] >= 1
+        assert not errors, errors
+        print('PASS live effects: tower projectile + net trigger, no Canvas exceptions')
         browser.close()
 
 

@@ -8,7 +8,9 @@
   const W = 1000, H = 600;
   const HOME_X = 506, HOME_Y = 334;
   const RING_RADII = [[388, 240], [286, 179], [185, 116]];
-  const storageKey = 'wolf-math-defense-save-v1';
+  const storageKey = 'wolf-math-defense-save-v1'; // Keep key: v1 saves migrate without data loss.
+  const styleKey = 'watchoutwolf-visual-style-v12';
+  let visualStyle = getSavedStyle();
   let state = G.newGame('easy');
   let stored = loadSave();
   let soundOn = true;
@@ -16,6 +18,7 @@
   let toastTimer = null;
   let fx = null;
   const moveFx = new Map();
+  const defenseFx = [];
   let drawing = true;
   let rolling = false;
   let lastView = '';
@@ -28,11 +31,26 @@
   }));
   const trees = Array.from({ length: 31 }, (_, i) => ({ x: i * 37 - 29, y: 245 + (i % 4) * 16, h: 51 + (i % 7) * 17 }));
 
+  function getSavedStyle() {
+    try { return localStorage.getItem(styleKey) === 'drama' ? 'drama' : 'classic'; }
+    catch (_) { return 'classic'; }
+  }
+  function setVisualStyle(next) {
+    visualStyle = next === 'drama' ? 'drama' : 'classic';
+    document.body.dataset.style = visualStyle;
+    document.querySelectorAll('[data-style]').forEach(button => {
+      const selected = button.dataset.style === visualStyle;
+      button.setAttribute('aria-pressed', String(selected));
+      button.classList.toggle('active', selected);
+    });
+    try { localStorage.setItem(styleKey, visualStyle); } catch (_) {}
+    render();
+  }
+  document.body.dataset.style = visualStyle;
   function loadSave() {
     try {
       const parsed = JSON.parse(localStorage.getItem(storageKey) || 'null');
-      if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.walls) || !Array.isArray(parsed.wolves) || !parsed.question) return null;
-      return parsed;
+      return G.migrateSave(parsed);
     } catch (_) { return null; }
   }
   function persist() { try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {} }
@@ -52,7 +70,7 @@
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       const now = audioCtx.currentTime;
-      const notes = kind === 'correct' ? [510, 650, 810] : kind === 'wrong' ? [340, 285, 220] : kind === 'wolf' ? [160, 145] : kind === 'flash' ? [390, 790, 1030] : kind === 'win' ? [392, 493, 587, 784] : [330];
+      const notes = kind === 'correct' ? [510, 650, 810] : kind === 'wrong' ? [340, 285, 220] : kind === 'wolf' ? [160, 145] : kind === 'flash' ? [390, 790, 1030] : kind === 'tower' ? [300,460] : kind === 'alarm' ? [520,410,520] : kind === 'win' ? [392, 493, 587, 784] : [330];
       notes.forEach((note, index) => {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -109,9 +127,15 @@
       startRoulette(); return;
     } else if (action === 'skip') result = G.skipDice(state);
     else if (action === 'endturn') {
+      const before = new Map(state.wolves.map(w => [w.id, { angle: w.angle, ring: w.ring }]));
       result = G.endTurn(state);
       if (result.ok) {
-        playSound(result.event.damageHouse ? 'wolf' : result.event.dawn ? 'correct' : 'tick');
+        for (const hit of result.event.projectiles) defenseFx.push({ kind: 'shot', ring: hit.ring, target: before.get(hit.wolfId), at: performance.now() });
+        for (const id of result.event.alarms) defenseFx.push({ kind: 'alarm', target: before.get(id), at: performance.now() });
+        for (const id of result.event.netted) defenseFx.push({ kind: 'net', target: before.get(id), at: performance.now() });
+        for (const id of result.event.trapped) defenseFx.push({ kind: 'spring', target: before.get(id), at: performance.now() });
+        if (defenseFx.length > 24) defenseFx.splice(0, defenseFx.length - 24);
+        playSound(result.event.damageHouse ? 'wolf' : result.event.dawn ? 'correct' : result.event.projectiles.length ? 'tower' : result.event.alarms.length ? 'alarm' : 'tick');
         if (result.event.damageHouse) { impact(`小屋 -${result.event.damageHouse} ♥`); vibrate(90); }
         else if (result.event.dawn) impact('黎明补给 +');
       }
@@ -182,7 +206,15 @@
     $('woodNum').textContent = state.wood;
     $('stoneNum').textContent = state.stone;
     $('batteryNum').textContent = state.charges;
-    $('missionText').textContent = state.phase === 'question' ? '算对数学题领物资；狼群正在等待你交卷。' : state.phase === 'dice' ? '数学挑战失败：掷骰赌一个手电筒，还是不冒险？' : state.phase === 'defend' ? '加固选中的防线，或者用手电筒把狼变成吉娃娃。' : '这一夜的结果已经揭晓。';
+    $('missionText').textContent = state.phase === 'question' ? '答题兑换建材；买陷阱、黏网、哨塔与警报铃。' : state.phase === 'dice' ? '算错可掷命运骰：好运拿到手电，狼变吉娃娃并退回外圈。' : state.phase === 'defend' ? '选中防线部署武器，永久哨塔每轮自动发射；手电可临时救急。' : '这一夜的结果已经揭晓。';
+    const line = state.phase === 'dice' ? '外婆：数学没算对？现在还要拿运气补考。'
+      : state.phase === 'defend' ? '女儿：冰淇淋是我送的。丑娘：那我还得报恩。'
+      : state.phase === 'won' ? '导演：狼没受伤，自尊心有待修复。'
+      : state.phase === 'lost' ? '外婆：墙没了，床下那位先出来帮忙。'
+      : G.nightOf(state.turn) === 1 ? '外婆：孙子还在玩唯一那台掌机。床底下有声音……'
+      : G.nightOf(state.turn) === 2 ? '孙子：我们有防御塔。丑娘（床下）：别朝屋里开。'
+      : '女儿：第三夜要到了。外婆：我先检查一下床底。';
+    $('sceneCaption').textContent = line;
     renderRings(); renderPhase(); renderWolves(); renderFeed();
     if (!drawing) draw(performance.now());
     lastView = state.phase;
@@ -190,7 +222,7 @@
   function renderRings() {
     $('defenseRings').innerHTML = G.RING_NAMES.map((label, i) => {
       const health = state.walls[i], max = G.MAX_WALLS[i];
-      return `<button type="button" class="ring-button ${state.selectedRing === i ? 'selected' : ''}" data-ring="${i}" aria-pressed="${state.selectedRing === i}"><div class="ring-header"><span class="ring-name"><span class="ring-symbol">${['Ⅰ', 'Ⅱ', 'Ⅲ'][i]}</span>${label}</span></div><div class="ring-meter"><div class="${health / max < .35 ? 'critical' : ''}" style="width:${100 * health / max}%"></div></div><div class="ring-footer"><span>${health === 0 ? '已被突破' : '耐久'}</span><span class="ring-health">${health}/${max}</span></div><div class="ring-footer"><span>陷阱</span><span>${state.traps[i]} / 2</span></div></button>`;
+      return `<button type="button" class="ring-button ${state.selectedRing === i ? 'selected' : ''}" data-ring="${i}" aria-pressed="${state.selectedRing === i}"><div class="ring-header"><span class="ring-name"><span class="ring-symbol">${['Ⅰ', 'Ⅱ', 'Ⅲ'][i]}</span>${label}</span></div><div class="ring-meter"><div class="${health / max < .35 ? 'critical' : ''}" style="width:${100 * health / max}%"></div></div><div class="ring-footer"><span>${health === 0 ? '已被突破' : '耐久'}</span><span class="ring-health">${health}/${max}</span></div><div class="ring-arsenal">⚙ ${state.traps[i]}　🕸 ${state.nets[i]}<span>🎯 ${state.towers[i]}级　🔔 ${state.alarms[i] ? (state.alarmCooldowns[i] ? '冷却' : '待命') : '—'}</span></div></button>`;
     }).join('');
   }
   function renderResult() {
@@ -206,8 +238,26 @@
     } else if (state.phase === 'dice') {
       panel.innerHTML = `${renderResult()}<div class="action-card"><div class="dice-layout"><span class="micro-tag">🎲 算错了的补救机会</span><h3 style="margin-top:12px">敢不敢掷命运骰？</h3><p class="dice-description">六个面，等概率。坏运气会让狼群袭来；好手气拿到手电筒，照狼一眼，狼就成吉娃娃。</p><div class="dice-outcomes">${G.DICE_FACES.map(f => `<span class="dice-face ${f.kind}"><span>${f.face}</span> ${f.label}</span>`).join('')}</div><div class="dice-actions"><button type="button" class="primary-button" data-action="roll">🎲 掷命运骰</button><button type="button" class="secondary-button" data-action="skip">安全跳过</button></div><p class="action-hint">概率公开：灾厄 1/6，拿手电 2/6，其余 3/6。没有真金钱赌博。</p></div></div>`;
     } else if (state.phase === 'defend') {
-      const can = (test) => state.actions > 0 && test;
-      panel.innerHTML = `${renderResult()}<div class="action-card"><div class="defend-header"><div class="defend-title">🛠 修筑与采购</div><span class="remaining-actions">剩余行动 ${state.actions} / 2</span></div><div class="defend-body"><p class="action-hint">当前目标：<b style="color:#ffe0a3">${G.RING_NAMES[state.selectedRing]}</b>。点击地图或下方防线可切换。</p><div class="build-choice"><button class="build-button" type="button" data-action="buyWood" ${can(state.coins >= 4) ? '' : 'disabled'}><b><span class="build-symbol">🪵</span>买两块木材</b><small>补充建材库存</small><span class="cost">−4 金币 → +2 木材</span></button><button class="build-button" type="button" data-action="buyStone" ${can(state.coins >= 5) ? '' : 'disabled'}><b><span class="build-symbol">⬡</span>买一块石材</b><small>用于布置绊狼陷阱</small><span class="cost">−5 金币 → +1 石材</span></button><button class="build-button" type="button" data-action="fortify" ${can(state.wood >= 2 && state.walls[state.selectedRing] < G.MAX_WALLS[state.selectedRing]) ? '' : 'disabled'}><b><span class="build-symbol">🏗</span>加固选中防线</b><small>防线耐久最多 +4</small><span class="cost">−2 木材</span></button><button class="build-button" type="button" data-action="repair" ${can(state.wood >= 3 && state.house < state.maxHouse) ? '' : 'disabled'}><b><span class="build-symbol">♥</span>修理外婆小屋</b><small>小屋生命最多 +4</small><span class="cost">−3 木材</span></button><button class="build-button" type="button" data-action="trap" ${can(state.wood >= 1 && state.stone >= 1 && state.traps[state.selectedRing] < 2) ? '' : 'disabled'}><b><span class="build-symbol">⚙</span>绊狼陷阱</b><small>踩中退后一圈</small><span class="cost">−1 木材 · −1 石材</span></button><button class="build-button" type="button" data-action="flash" ${state.charges && state.selectedWolf && state.wolves.some(w => w.id === state.selectedWolf && w.kind !== 'dog') ? '' : 'disabled'}><b><span class="build-symbol">🔦</span>照射选中的狼</b><small>${state.selectedWolf ? `当前选中 #${state.selectedWolf}` : '先点地图里的狼'}</small><span class="cost">−1 手电电量 · 免费行动</span></button></div><button type="button" class="endturn-button" data-action="endturn">🌙 结束回合 · 狼群开始行动 →</button><p class="attack-warning">⚠ 结束回合后，狼会攻击脚下那层防线。耐久耗尽后将继续向小屋前进。</p></div></div>`;
+      const can = condition => state.actions > 0 && condition;
+      const r = state.selectedRing;
+      const actionButton = (key, emoji, title, desc, cost, eligible) =>
+        `<button class="build-button" type="button" data-action="${key}" ${can(eligible) ? '' : 'disabled'}><b><span class="build-symbol">${emoji}</span>${title}</b><small>${desc}</small><span class="cost">${cost}</span></button>`;
+      const selectedWolf = state.wolves.find(w => w.id === state.selectedWolf && w.kind !== 'dog');
+      panel.innerHTML = `${renderResult()}<div class="action-card"><div class="defend-header"><div class="defend-title">🛠 陷阱 · 武器 · 施工</div><span class="remaining-actions">剩余 ${state.actions} / 2 次</span></div><div class="defend-body"><p class="action-hint">部署位置：<b class="selected-defense-name">${G.RING_NAMES[r]}</b>。点击战场或防线卡片切换。</p>
+        <div class="build-choice"><div class="build-group-label">一次性陷阱 <small>每圈最多各 2 个</small></div>
+          ${actionButton('trap', '⚙️', '弹簧绊狼夹', '触发后弹退一圈，狼暂停行动', '木材 1 · 石材 1', state.wood >= 1 && state.stone >= 1 && state.traps[r] < 2)}
+          ${actionButton('net', '🕸️', '冰淇淋黏网', '困住狼两次攻击；女儿的冰淇淋', '木材 1 · 金币 3', state.wood >= 1 && state.coins >= 3 && state.nets[r] < 2)}
+          <div class="build-group-label">可升级自动防御 <small>每回合自动触发</small></div>
+          ${actionButton('tower', '🎯', `弹弓哨塔 Lv.${state.towers[r]}/2`, '发射石子降低狼的胆量；归零逃跑', '木材 2 · 石材 1 · 金币 2', state.wood >= 2 && state.stone >= 1 && state.coins >= 2 && state.towers[r] < 2)}
+          ${actionButton('alarm', '🔔', state.alarms[r] ? '警报铃已安装' : '月光警报铃', '每 3 回合吓住一只狼两轮', '木材 1 · 石材 2 · 金币 3', state.wood >= 1 && state.stone >= 2 && state.coins >= 3 && !state.alarms[r])}
+          <div class="build-group-label">修筑与材料 <small>小屋的日常工程</small></div>
+          ${actionButton('buyWood', '🪵', '采购 2 块木材', '用于修墙、制作各类陷阱', '金币 4 → 木材 +2', state.coins >= 4)}
+          ${actionButton('buyStone', '⬡', '采购 1 块石材', '用于哨塔、夹子和警报铃', '金币 5 → 石材 +1', state.coins >= 5)}
+          ${actionButton('fortify', '🏗️', '加固选中防线', '耐久最多 +4', '木材 2', state.wood >= 2 && state.walls[r] < G.MAX_WALLS[r])}
+          ${actionButton('repair', '♥', '修理外婆小屋', '生命最多 +4', '木材 3', state.wood >= 3 && state.house < state.maxHouse)}
+          <div class="build-group-label">特殊道具 <small>不占工程行动</small></div>
+          <button class="build-button torch-action" type="button" data-action="flash" ${state.charges > 0 && selectedWolf ? '' : 'disabled'}><b><span class="build-symbol">🔦</span>手电变吉娃娃</b><small>${selectedWolf ? `目标：狼 #${selectedWolf.id}` : '先选中一只狼'}</small><span class="cost">电量 1 · 不占建造次数</span></button>
+        </div><button type="button" class="endturn-button" data-action="endturn">🌙 结束回合 · 自动防御开火 →</button><p class="attack-warning">⚠ 结束回合：先触发哨塔和警报铃，接着结算陷阱，最后才是狼的攻击。</p></div></div>`;
     } else {
       panel.innerHTML = `<div class="action-card"><div class="dice-layout"><h3>${state.phase === 'won' ? '守夜成功！' : '防线失守！'}</h3><p class="dice-description">${escapeText(state.gameEndReason)}</p><button class="primary-button" type="button" data-restart="yes">重新开始</button></div></div>`;
     }
@@ -223,7 +273,7 @@
       const label = G.getWolfName(w);
       const position = w.ring === 0 ? '森林边缘' : G.RING_NAMES[w.ring - 1];
       const ready = state.phase === 'defend' && state.charges > 0 && !dog;
-      return `<div class="wolf-card ${state.selectedWolf === w.id ? 'selected' : ''}"><div class="wolf-avatar ${dog ? 'dog' : ''}">${dog ? '🐕' : w.kind === 'heavy' ? '🐺' : '🐺'}</div><div class="wolf-details"><strong>#${w.id} ${label}</strong><small>${position} ${dog ? '· 正在逃跑' : `· 攻击 ${w.attack}`}</small></div>${dog ? '<span style="color:#a7e8bc;font-size:11px">无害 ✓</span>' : `<button class="target-choose ${ready ? 'torch-target' : ''}" type="button" data-wolf="${w.id}" aria-label="选中第${w.id}只狼">${state.selectedWolf === w.id ? '已选中' : '选中'}</button>`}${ready ? `<button class="target-choose torch-target" type="button" data-directflash="${w.id}" aria-label="用手电照射第${w.id}只狼">🔦 照射</button>` : ''}</div>`;
+      return `<div class="wolf-card ${state.selectedWolf === w.id ? 'selected' : ''}"><div class="wolf-avatar ${dog ? 'dog' : ''}">${dog ? '🐕' : w.kind === 'heavy' ? '🐺' : '🐺'}</div><div class="wolf-details"><strong>#${w.id} ${label}</strong><small>${position} ${dog ? '· 正在逃跑' : `· 攻击 ${w.attack} · 胆量 ${w.courage}/${w.maxCourage}`}</small></div>${dog ? '<span style="color:#a7e8bc;font-size:11px">无害 ✓</span>' : `<button class="target-choose ${ready ? 'torch-target' : ''}" type="button" data-wolf="${w.id}" aria-label="选中第${w.id}只狼">${state.selectedWolf === w.id ? '已选中' : '选中'}</button>`}${ready ? `<button class="target-choose torch-target" type="button" data-directflash="${w.id}" aria-label="用手电照射第${w.id}只狼">🔦 照射</button>` : ''}</div>`;
     }).join('');
   }
   function renderFeed() {
@@ -244,6 +294,7 @@
   function closeHelp() { $('helpOverlay').classList.remove('visible'); $('helpOverlay').setAttribute('aria-hidden', 'true'); }
   document.addEventListener('click', event => {
     const target = event.target;
+    if (target.closest('button[data-style]')) { setVisualStyle(target.closest('button[data-style]').dataset.style); playSound('tick'); return; }
     if (target.closest('[data-mode]')) { start(target.closest('[data-mode]').dataset.mode); return; }
     if (target.closest('[data-restart]')) { $('endOverlay').classList.remove('visible'); start('easy'); return; }
     if (target.closest('[data-answer]')) { interact('answer', target.closest('[data-answer]').dataset.answer); return; }
@@ -338,7 +389,44 @@
     ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = color; ctx.fillText(text, x, y);
   }
+  function backgroundDrama(t) {
+    // Short-drama mode: cinematic twilight, stage depth, warm practical lighting and mist.
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#110f1c'); sky.addColorStop(.4, '#27303b'); sky.addColorStop(.72, '#393638'); sky.addColorStop(1, '#161c26');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    // Moonlit clouds have a deliberately slow drift; no hard cuts.
+    for (let i=0; i<7; i++) {
+      const x = (i*178 + Math.sin(t/9600+i)*25) % 1100 - 50;
+      ctx.globalAlpha = .06 + .014*Math.sin(t/3000+i);
+      ellipse(x, 82 + i*31, 175+i*12, 25, '#d9cad2');
+    }
+    ctx.globalAlpha = 1;
+    ctx.save();ctx.shadowColor='#d4c6bd';ctx.shadowBlur=24;
+    ellipse(818,85,41,41,'#d8c6b8');ctx.restore();
+    ellipse(831,75,7,7,'#aea4a3');ellipse(805,99,6,5,'#aca09e');
+    polygon([[0,284],[122,221],[205,267],[356,210],[501,256],[650,193],[810,270],[918,205],[1000,252],[1000,600],[0,600]],'#17252d');
+    polygon([[0,335],[90,275],[198,308],[317,250],[481,320],[630,268],[790,307],[1000,256],[1000,600],[0,600]],'#1b272c');
+    trees.forEach((tree,i)=>{
+      ctx.globalAlpha=.6+.14*(i%3);
+      polygon([[tree.x-21,tree.y+30],[tree.x,tree.y-tree.h*1.15],[tree.x+18,tree.y+30]],i%4===0?'#15202a':'#141f27');
+      polygon([[tree.x-27,tree.y+42],[tree.x,tree.y-tree.h*.86],[tree.x+27,tree.y+42]],'#1d292a');
+      rounded(tree.x-3,tree.y+18,6,31,2,'#283033');
+    });ctx.globalAlpha=1;
+    const ground=ctx.createRadialGradient(505,365,15,505,375,590);
+    ground.addColorStop(0,'#4f4c42');ground.addColorStop(.62,'#282f30');ground.addColorStop(1,'#171f29');
+    ellipse(505,395,525,264,ground);
+    for(let i=0;i<27;i++){
+      let px=26+(i*71.71)%950, py=383+(i*43.1)%212;
+      ctx.globalAlpha=.12;ellipse(px,py,12+(i%4)*8,2,'#b1a69c');
+    }ctx.globalAlpha=1;
+    // Stage fog drifts rather than teleporting across frames.
+    for(let i=0;i<4;i++) {
+      let x=140+i*210+Math.sin(t/2700+i)*31;
+      ctx.globalAlpha=.055; ellipse(x,420+i*12,184,31,'#e4c9b9');
+    }ctx.globalAlpha=1;
+  }
   function background(t) {
+    if (visualStyle === 'drama') { backgroundDrama(t); return; }
     const sky = ctx.createLinearGradient(0, 0, 0, 600);
     sky.addColorStop(0, '#0a142b'); sky.addColorStop(.45, '#172c42'); sky.addColorStop(1, '#29413c');
     ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
@@ -379,11 +467,11 @@
     const [rx, ry] = RING_RADII[i];
     const hp = state.walls[i], max = G.MAX_WALLS[i];
     const selected = state.selectedRing === i;
-    const ringColor = hp === 0 ? '#a25a60' : hp / max < .33 ? '#d68a6f' : i === 0 ? '#b28c65' : i === 1 ? '#94aeb9' : '#c0a36c';
+    const ringColor = visualStyle === 'drama' ? (hp === 0 ? '#9b4e52' : hp/max < .33 ? '#c16d60' : ['#8b684c','#77878c','#a38a63'][i]) : (hp === 0 ? '#a25a60' : hp / max < .33 ? '#d68a6f' : i === 0 ? '#b28c65' : i === 1 ? '#94aeb9' : '#c0a36c');
     ctx.save();
     ctx.globalAlpha = selected ? .3 : .12;
     ctx.lineWidth = selected ? 29 : 19;
-    ctx.strokeStyle = selected ? '#f7ca70' : ringColor;
+    ctx.strokeStyle = selected ? (visualStyle === 'drama' ? '#ec9c5d' : '#f7ca70') : ringColor;
     ctx.beginPath(); ctx.ellipse(HOME_X, HOME_Y, rx, ry, 0, 0, 2 * Math.PI); ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.setLineDash(hp === 0 ? [3, 22] : i === 0 ? [11, 5] : i === 1 ? [19, 8] : [29, 7]);
@@ -411,7 +499,55 @@
     }
     ctx.restore();
   }
+  function drawCabinDrama(t) {
+    const x=HOME_X,y=HOME_Y;
+    // Hand-lit, pseudo-3D village cottage rather than flat emoji illustration.
+    const warmth=ctx.createRadialGradient(x,y,0,x,y,200);
+    warmth.addColorStop(0,'#c4844473');warmth.addColorStop(1,'#c4844400');
+    ellipse(x,y+43,220,155,warmth); ellipse(x+4,y+78,146,27,'#111b22bb');
+    polygon([[x-104,y-48],[x-119,y-30],[x-116,y+86],[x-101,y+92]],'#4e433e');
+    rounded(x-103,y-44,216,132,3,'#675a4d','#342e33',5);
+    polygon([[x+113,y-44],[x+140,y-57],[x+138,y+61],[x+113,y+88]],'#433c3d','#25272d',4);
+    for(let i=0;i<9;i++) {
+      ctx.strokeStyle='#3b3537';ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(x-102,y-31+i*14);ctx.lineTo(x+111,y-31+i*14);ctx.stroke();
+      for(let j=0;j<4;j++){ ctx.globalAlpha=.25;ellipse(x-83+j*60+(i%2)*16,y-27+i*14,11,1,'#c9ab86');ctx.globalAlpha=1;}
+    }
+    rounded(x+65,y-154,31,79,1,'#5e514d','#29282e',4);
+    for(let i=0;i<6;i++)rounded(x+65,y-149+i*12,31,2,0,'#ac8d76');
+    polygon([[x-134,y-39],[x-2,y-167],[x+136,y-57],[x+155,y-44],[x+8,y-127],[x-124,y-29]],'#34353e','#1d252d',5);
+    for(let i=0;i<8;i++) {
+      const px=x-119+i*33;
+      ctx.strokeStyle=i%2?'#61554e':'#524d4d';ctx.lineWidth=5;
+      ctx.beginPath();ctx.moveTo(px,y-49-i*6);ctx.lineTo(px+39,y-24-i*5);ctx.stroke();
+    }
+    ctx.strokeStyle='#ba9670';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-133,y-38);ctx.lineTo(x-2,y-166);ctx.lineTo(x+138,y-55);ctx.stroke();
+    for(const sx of [x-63,x+65]) {
+      ctx.save();ctx.shadowColor='#f4b16c';ctx.shadowBlur=25;
+      rounded(sx-25,y-8,52,51,2,'#e7a668','#332d32',5);ctx.restore();
+      ctx.strokeStyle='#604b42';ctx.lineWidth=4;
+      ctx.beginPath();ctx.moveTo(sx,y-8);ctx.lineTo(sx,y+43);ctx.moveTo(sx-24,y+17);ctx.lineTo(sx+27,y+17);ctx.stroke();
+    }
+    // The glasses and the one handheld console establish character continuity.
+    ellipse(x-63,y+8,10,12,'#e8b08c');
+    ellipse(x-70,y+8,5,5,null,'#463b3e',2);ellipse(x-57,y+8,5,5,null,'#463b3e',2);
+    ellipse(x+65,y+6,10,10,'#a97c65');
+    rounded(x+52,y+20,27,13,3,'#242c3e','#a69c8e',1);
+    ellipse(x+59,y+26,2,2,'#8cd9da');
+    // Bed-bottom cameo: only visible in short-drama style, no sudden character teleport.
+    rounded(x-88,y+27,49,8,2,'#6c4538');
+    ellipse(x-60,y+40,2,2,'#e1ac7d');ellipse(x-53,y+40,2,2,'#e1ac7d');
+    rounded(x-23,y+25,45,62,2,'#332f38','#ad7650',4);
+    ellipse(x+12,y+58,3,3,'#f9d9aa');
+    rounded(x-64,y+81,130,9,1,'#423b38');
+    rounded(x-68,y+95,136,29,7,'#1a222be9','#bb8b64',2);
+    label('外婆家 · 午夜',x,y+109,'#f8d3a7','center',14);
+    // Wet highlights and a hanging amber lantern keep the cabin in the world.
+    ctx.strokeStyle='#755b4c';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+119,y-45);ctx.lineTo(x+120,y+4);ctx.stroke();
+    ctx.save();ctx.shadowBlur=20;ctx.shadowColor='#ffb05e';ellipse(x+120,y+13,8,11,'#daa36c');ctx.restore();
+    if(state.house<state.maxHouse/2){ctx.strokeStyle='#372e30';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x+94,y+1);ctx.lineTo(x+80,y+22);ctx.lineTo(x+104,y+42);ctx.stroke();}
+  }
   function drawCabin(t) {
+    if (visualStyle === 'drama') { drawCabinDrama(t); return; }
     // Warm firelight and ground shadow.
     ctx.save();
     ctx.globalAlpha = .24 + Math.sin(t / 150) * .018;
@@ -491,7 +627,41 @@
     const wobble = Math.sin(t / 520 + wolf.id * 2.43) * (wolf.kind === 'dog' ? 4 : 2.1);
     return { x: HOME_X + Math.cos(wolf.angle) * rx, y: HOME_Y + Math.sin(wolf.angle) * ry + wobble };
   }
+  function drawWolfDrama(wolf,t) {
+    const pos=wolfPosition(wolf,t),dog=wolf.kind==='dog',heavy=wolf.kind==='heavy';
+    const size=dog?.73:heavy?1.2:1;
+    ctx.save();ctx.translate(pos.x,pos.y);ctx.scale(size,size);
+    if(state.selectedWolf===wolf.id&&!dog){ctx.shadowColor='#f8b67c';ctx.shadowBlur=15;ellipse(0,-4,39,49,'#ad66472b','#e9bc80',3);ctx.shadowBlur=0;}
+    ellipse(2,30,39,11,'#10141a98');
+    // Asymmetrical ears, layered fur, uneven grin: the comic's deliberately ugly wolf.
+    polygon([[-27,2],[-47,-11],[-45,-25],[-25,-8]],dog?'#bb8b62':'#39363f','#242631',2);
+    rounded(-28,6,56,29,10,dog?'#bb8a62':heavy?'#66515b':'#55545d','#252630',3);
+    for(let i=0;i<5;i++) polygon([[-29+i*13,8],[-20+i*13,31],[-32+i*13,18]],dog?'#d4a174':'#6b6669');
+    rounded(-27,24,14,16,3,dog?'#986747':'#43424b');rounded(12,24,14,16,3,dog?'#986747':'#43424b');
+    polygon([[-31,-10],[-22,-63],[-1,-28]],dog?'#cb9464':'#4d4d56','#222733',3);
+    polygon([[7,-27],[30,-53],[31,-5]],dog?'#bb865d':'#65616b','#222733',3);
+    polygon([[-23,-20],[-21,-48],[-9,-26]],'#a46772');
+    polygon([[18,-26],[27,-42],[25,-13]],'#a56b74');
+    ellipse(0,-8,33,34,dog?'#d8a875':heavy?'#756168':'#756d70','#37343c',3);
+    for(let i=0;i<6;i++){
+      const bx=-20+i*8,by=-32+(i%3)*2;
+      ctx.strokeStyle=dog?'#b77a51':'#938388';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx-2,by-8);ctx.stroke();
+    }
+    ellipse(-13,-15,9,12,'#ebdbc9');ellipse(12,-10,7,11,'#ead8c5');
+    ellipse(-11,-14,3,5,dog?'#302a2a':'#c64f46');ellipse(12,-10,3,5,dog?'#302a2a':'#c64f46');
+    ctx.strokeStyle='#302b32';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-26,-24);ctx.lineTo(-6,-21);ctx.moveTo(6,-19);ctx.lineTo(20,-27);ctx.stroke();
+    polygon([[-17,2],[0,15],[17,5],[0,24]],dog?'#f6d7b3':'#9c8b8a');
+    ellipse(1,7,9,7,'#34313a');
+    if(dog){ctx.strokeStyle='#8c5044';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,14,9,0,Math.PI);ctx.stroke();}
+    else {polygon([[-15,15],[-8,24],[-4,16],[2,26],[8,15]],'#e3d4c9','#3f3038',1);}
+    rounded(-23,-76,46,21,6,dog?'#57634b':'#4e3741',dog?'#a3c18e':'#b68a79',1);
+    label(dog?'汪':String(wolf.id),0,-65,'#ffe2b4','center',15);
+    if(dog)label('退！',0,52,'#d4e9bb','center',14);
+    ctx.restore();
+  }
   function drawWolf(wolf, t) {
+    if (visualStyle === 'drama') { drawWolfDrama(wolf,t); return; }
     const p = wolfPosition(wolf,t), dog = wolf.kind === 'dog', heavy = wolf.kind === 'heavy';
     const size = dog ? .69 : heavy ? 1.20 : wolf.kind === 'swift' ? .9 : 1;
     ctx.save(); ctx.translate(p.x,p.y);ctx.scale(size,size);
@@ -531,6 +701,92 @@
     }
     ctx.restore();
   }
+  function drawDefenses(t) {
+    // Each ring has four equipment slots. Installed equipment is shown, not merely counted.
+    const angles = [-2.05, .38, -1.0, 2.55];
+    for (let ring=0;ring<3;ring++) {
+      const [rx,ry]=RING_RADII[ring];
+      for(let kind=0;kind<4;kind++) {
+        const count=[state.traps[ring],state.nets[ring],state.towers[ring],state.alarms[ring]][kind];
+        if(!count)continue;
+        const a=angles[kind]+ring*.17;
+        const x=HOME_X+Math.cos(a)*rx,y=HOME_Y+Math.sin(a)*ry;
+        ctx.save();ctx.translate(x,y);
+        ellipse(0,12,20,6,'#121b23a1');
+        if(kind===0){
+          rounded(-16,-7,32,11,3,'#92755f','#282d32',2);
+          for(let j=0;j<count;j++){
+            const dx=j*10-5;
+            ctx.strokeStyle='#efc07e';ctx.lineWidth=3;
+            ctx.beginPath();ctx.moveTo(dx-6,-6);ctx.lineTo(dx,-16);ctx.lineTo(dx+6,-6);ctx.stroke();
+          }
+        }else if(kind===1){
+          ctx.strokeStyle='#c9bfa8';ctx.lineWidth=2.2;
+          for(let j=-2;j<=2;j++){
+            ctx.beginPath();ctx.moveTo(-17,j*5);ctx.lineTo(17,j*5);ctx.stroke();
+            ctx.beginPath();ctx.moveTo(j*8,-13);ctx.lineTo(j*8,12);ctx.stroke();
+          }
+          ellipse(0,0,6,6,'#e5b488');
+        }else if(kind===2){
+          rounded(-10,-9,22,27,3,'#695a4d','#262a30',2);
+          polygon([[-21,-14],[-4,-27],[18,-14]],'#a88d65','#403a39',2);
+          ctx.strokeStyle='#ead49e';ctx.lineWidth=3;
+          ctx.beginPath();ctx.moveTo(-2,-14);ctx.lineTo(0,-29);ctx.lineTo(13,-34);ctx.stroke();
+          ellipse(15,-35,4,4,'#c0aca1');
+          if(count>1)label('Ⅱ',0,13,'#ffe4ab','center',12);
+        }else{
+          ctx.strokeStyle='#b6a286';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,14);ctx.lineTo(0,-22);ctx.stroke();
+          ctx.save();ctx.shadowColor='#f6bd67';ctx.shadowBlur=8+5*Math.sin(t/400)**2;
+          polygon([[-12,-21],[0,-34],[12,-21]],'#b69a74');ellipse(0,-21,10,8,'#d5ad64');ctx.restore();
+          if(!state.alarmCooldowns[ring]){
+            ctx.strokeStyle='rgba(255,223,170,.4)';ctx.lineWidth=2;
+            ctx.beginPath();ctx.arc(0,-20,14+3*Math.sin(t/750)**2,Math.PI*1.5,Math.PI*.5);ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+    }
+  }
+  function drawDefenseEffects(t) {
+    for (let k=defenseFx.length-1;k>=0;k--) {
+      const fx=defenseFx[k],dt=t-fx.at;
+      if(dt>930||!fx.target){defenseFx.splice(k,1);continue;}
+      const r=fx.target.ring<=0 ? [456,259] : RING_RADII[fx.target.ring-1];
+      const target={x:HOME_X+Math.cos(fx.target.angle)*r[0],y:HOME_Y+Math.sin(fx.target.angle)*r[1]};
+      const alpha=Math.max(0,1-dt/930),progress=Math.min(1,dt/760);
+      ctx.save();ctx.globalAlpha=alpha;
+      if(fx.kind==='shot') {
+        const [rx,ry]=RING_RADII[fx.ring],a=-1.0+fx.ring*.17;
+        const src={x:HOME_X+Math.cos(a)*rx,y:HOME_Y+Math.sin(a)*ry};
+        ctx.strokeStyle='#ffe09b';ctx.lineWidth=2.7;ctx.setLineDash([3,8]);
+        ctx.beginPath();ctx.moveTo(src.x,src.y-20);ctx.quadraticCurveTo((src.x+target.x)/2,(src.y+target.y)/2-45,target.x,target.y);ctx.stroke();ctx.setLineDash([]);
+        const eased=progress*progress*(3-2*progress);
+        const px=src.x+(target.x-src.x)*eased,py=src.y+(target.y-src.y)*eased-38*4*eased*(1-eased);
+        ctx.shadowColor='#fff1c5';ctx.shadowBlur=17;ellipse(px,py,5.5,5.5,'#ffe0a6');
+        if(progress>.7)label('−1 胆量',target.x,target.y-45-dt*.02,'#ffebbc','center',14);
+      }else if(fx.kind==='alarm') {
+        for(let i=0;i<3;i++){
+          ctx.strokeStyle='#e6cb91';ctx.lineWidth=2;
+          ctx.beginPath();ctx.ellipse(target.x,target.y,16+progress*52+i*9,10+progress*32+i*4,0,0,Math.PI*2);ctx.stroke();
+        }
+        label('警铃！',target.x,target.y-47,'#ffdfb4','center',17);
+      }else if(fx.kind==='net'){
+        ctx.strokeStyle='#f5caa5';ctx.lineWidth=2;
+        for(let d=-2;d<=2;d++){
+          ctx.beginPath();ctx.moveTo(target.x-22,target.y+d*8);ctx.lineTo(target.x+22,target.y+d*8);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(target.x+d*9,target.y-21);ctx.lineTo(target.x+d*9,target.y+21);ctx.stroke();
+        }
+        label('黏住！',target.x,target.y-50,'#fff1ca','center',16);
+      }else if(fx.kind==='spring'){
+        ctx.strokeStyle='#ffe0a5';ctx.lineWidth=3;
+        for(let i=0;i<8;i++){
+          const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(target.x+20*Math.cos(a),target.y+18*Math.sin(a));ctx.lineTo(target.x+(34+progress*25)*Math.cos(a),target.y+(29+progress*20)*Math.sin(a));ctx.stroke();
+        }
+        label('弹退！',target.x,target.y-50,'#f8debd','center',16);
+      }
+      ctx.restore();
+    }
+  }
   function drawTorch(t) {
     if (!fx) return;
     const dt = t - fx.at;
@@ -561,22 +817,40 @@
     ctx.clearRect(0,0,W,H);
     background(t);
     for(let i=0;i<3;i++) drawRing(i,t);
+    drawDefenses(t);
     drawCabin(t);
     state.wolves.slice().sort((a,b)=>wolfPosition(a,t).y-wolfPosition(b,t).y).forEach(w=>drawWolf(w,t));
     drawTorch(t);
+    drawDefenseEffects(t);
     // Dark corners guide attention into the playable space.
     const vignette=ctx.createRadialGradient(500,305,180,500,310,650);
     vignette.addColorStop(0,'#04091400');vignette.addColorStop(1,'#020812ae');
     ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
+    if(visualStyle==='drama') {
+      ctx.fillStyle='#080a14d9';ctx.fillRect(0,0,W,15);ctx.fillRect(0,H-16,W,16);
+      label('丑狼喜剧  ·  第四幕 / THE NIGHT WATCH',500,8,'#dab38b','center',10);
+      ctx.save();ctx.globalAlpha=.055;
+      for(let i=0;i<37;i++) {
+        const bx=(i*157)%W,by=(i*73)%H;
+        ellipse(bx,by,1.2,1.2,'#fbf0db');
+      }
+      ctx.restore();
+    }
     screenshotFrame++;
     if (drawing) requestAnimationFrame(draw);
   }
 
   if (stored && stored.phase !== 'won' && stored.phase !== 'lost') $('continueButton').classList.remove('hidden');
+  document.querySelectorAll('[data-style]').forEach(button => {
+    const selected=button.dataset.style===visualStyle;
+    button.setAttribute('aria-pressed',String(selected));
+    button.classList.toggle('active',selected);
+  });
   render();
   requestAnimationFrame(draw);
   window.WolfMathDebug = {
     getState: () => JSON.parse(JSON.stringify(state)),
+    getVisualStyle: () => visualStyle, setVisualStyle,
     start, interact, render, endTurn: () => interact('endturn'),
     screenshot: () => canvas.toDataURL('image/png'),
     setState(next) { state = next; render(); persist(); }

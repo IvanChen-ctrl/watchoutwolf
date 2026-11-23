@@ -1,12 +1,11 @@
-# WatchOutWolf v1.1.0
+# WatchOutWolf v1.2.0 · 双画风与防御体系
 
-Android package: `com.moonfence.wolfmath`.
-
-- Fixed flashlight direct-target selection and Chihuahua's automatic one-ring retreat.
-- Fixed six-face roulette display alignment and immediate result save.
-- Fixed outer trap retreat to forest and subsequent removal.
-- Added deterministic rule regression and touch-screen browser test.
-- Android APK build: `Actions > Build offline Android APK > Run workflow`.
-- iOS web: `Actions > Publish iPhone and browser version to GitHub Pages > Run workflow` (after configuring Pages to use GitHub Actions).
-
-Debug APK is for sideload testing. It must be built and validated before installation; source files are not an APK.
+- 🧮 经典数学堡垒 / 🎬 丑狼短剧：开场与战斗画面均可切换，存档不丢失。
+- 🎬 独立午夜木屋、丑狼脸部、森林雾、暖色灯光、电影边框与唯一一条字幕。短剧人物设定延续，但不是原 3D 模型导入。
+- ⚙ 弹簧夹：保留并明确为退后层级的单次防御。
+- 🕸 冰淇淋黏网：新增单次两轮阻滞。
+- 🎯 弹弓哨塔：每圈可升级到 2 级；每级每回合使狼胆量 −1，归零无伤劝退。
+- 🔔 月光警报铃：每圈上限 1 座；每 3 回合打断一只狼两轮攻击。
+- 🔦 手电保留：变吉娃娃后立即后退外面一层；不占工程行动。
+- 新增各类武器的 Canvas 特效与规则测试；旧版本本地存档会自动升级。
+- Android APK：debug `com.moonfence.wolfmath`，versionCode 3，versionName 1.2.0。

@@ -10,6 +10,13 @@
   const PER_NIGHT = 6;
   const RING_NAMES = ['外圈木栅', '中圈石墙', '内圈铁门'];
   const MAX_WALLS = [11, 10, 9];
+  const MAX_DEFENSE = Object.freeze({ traps: 2, nets: 2, towers: 2, alarms: 1 });
+  const DEFENSE_ITEMS = Object.freeze({
+    trap: { label: '弹簧绊狼夹', cost: { wood: 1, stone: 1 }, limit: 2, description: '一次性：把狼弹退一圈，并眩晕一回合' },
+    net: { label: '冰淇淋黏网', cost: { wood: 1, coins: 3 }, limit: 2, description: '一次性：被黏住的狼本回合及下一回合停止攻击' },
+    tower: { label: '弹弓哨塔', cost: { wood: 2, stone: 1, coins: 2 }, limit: 2, description: '永久：每级每回合减少一只狼1点胆量，归零劝退' },
+    alarm: { label: '月光警报铃', cost: { wood: 1, stone: 2, coins: 3 }, limit: 1, description: '永久：每隔三回合让本圈一只狼停止两轮攻击' }
+  });
   const DICE_FACES = [
     { face: 1, label: '黑雾来袭', detail: '小屋失去2点生命，额外来一只狼。', kind: 'bad' },
     { face: 2, label: '虚惊一场', detail: '狼愣住了。你什么也没拿到。', kind: 'neutral' },
@@ -116,7 +123,8 @@
     }
     const kind = fixedKind || (ring > 1 ? 'sneak' : night >= 3 && variant < .22 ? 'heavy' : night >= 2 && variant < .38 ? 'swift' : 'wolf');
     const angle = -Math.PI * .84 + rollRandom(state) * Math.PI * 1.65;
-    const wolf = { id: ++state.nextWolfId, kind, ring, angle, attack: kind === 'heavy' ? 3 : 2, dogTurns: 0, stunned: 0 };
+    const courage = kind === 'heavy' ? 5 : kind === 'swift' ? 2 : kind === 'sneak' ? 3 : 3;
+    const wolf = { id: ++state.nextWolfId, kind, ring, angle, attack: kind === 'heavy' ? 3 : 2, dogTurns: 0, stunned: 0, courage, maxCourage: courage };
     state.wolves.push(wolf);
     if (ring > 1) log(state, `警报！钻地狼${wolf.id}绕过外圈，直接潜入第${ring}圈！`, 'bad');
     return wolf;
@@ -125,10 +133,13 @@
   function newGame(mode, seed) {
     const chosen = mode === 'nightmare' ? 'nightmare' : 'easy';
     const state = {
-      version: 1, mode: chosen, seed: (Number(seed) >>> 0) || (Date.now() >>> 0) || 2817,
+      version: 2, mode: chosen, seed: (Number(seed) >>> 0) || (Date.now() >>> 0) || 2817,
       turn: 1, night: 1, phase: 'question', maxTurns: TOTAL_TURNS,
       house: chosen === 'nightmare' ? 12 : 15, maxHouse: 15, coins: 4, wood: 3, stone: 0, charges: 0,
-      walls: chosen === 'nightmare' ? [6, 5, 4] : [7, 6, 5], traps: [0, 0, 0], actions: 2, maxActions: 2,
+      walls: chosen === 'nightmare' ? [6, 5, 4] : [7, 6, 5],
+      traps: [0, 0, 0], nets: [0, 0, 0], towers: [0, 0, 0], alarms: [0, 0, 0], alarmCooldowns: [0, 0, 0],
+      defenseStats: { springs: 0, nets: 0, shots: 0, scared: 0, alarms: 0 },
+      actions: 2, maxActions: 2,
       selectedRing: 0, selectedWolf: null, streak: 0, correct: 0, wrong: 0,
       score: 0, logId: 0, nextWolfId: 0, wolves: [], feed: [], lastDice: null,
       lastResult: null, gameEndReason: ''
@@ -136,6 +147,29 @@
     state.question = makeQuestion(state);
     addWolf(state, 'wolf');
     log(state, '外婆：路上还打游戏？快用数学换材料！狼只懂拆迁。', 'story');
+    return state;
+  }
+
+  // Previous builds stored version 1. Upgrade in place without resetting progress or the RNG seed.
+  function migrateSave(state) {
+    if (!state || ![1, 2].includes(state.version) || !Array.isArray(state.walls) ||
+        state.walls.length !== 3 || !Array.isArray(state.wolves) || !state.question) return null;
+    for (const [key, maximum] of Object.entries(MAX_DEFENSE)) {
+      if (!Array.isArray(state[key]) || state[key].length !== 3) state[key] = [0, 0, 0];
+      state[key] = state[key].map(v => clamp(Number.isFinite(v) ? Math.trunc(v) : 0, 0, maximum));
+    }
+    if (!Array.isArray(state.alarmCooldowns) || state.alarmCooldowns.length !== 3) state.alarmCooldowns = [0, 0, 0];
+    if (!state.defenseStats || typeof state.defenseStats !== 'object') state.defenseStats = {};
+    for (const key of ['springs','nets','shots','scared','alarms']) {
+      if (!Number.isFinite(state.defenseStats[key])) state.defenseStats[key] = 0;
+    }
+    for (const wolf of state.wolves) {
+      const base = wolf.kind === 'heavy' ? 5 : wolf.kind === 'swift' ? 2 : 3;
+      if (!Number.isFinite(wolf.maxCourage)) wolf.maxCourage = base;
+      if (!Number.isFinite(wolf.courage)) wolf.courage = wolf.kind === 'dog' ? 0 : base;
+      if (!Number.isFinite(wolf.stunned)) wolf.stunned = 0;
+    }
+    state.version = 2;
     return state;
   }
 
@@ -239,7 +273,23 @@
       if (state.wood < 1 || state.stone < 1) return { ok: false, message: '布置陷阱需要1木材+1石材。' };
       if (state.traps[r] >= 2) return { ok: false, message: '这一圈最多可放2个陷阱。' };
       state.wood -= 1; state.stone -= 1; state.traps[r]++;
-      log(state, `${RING_NAMES[r]}布置了陷阱。狼踩中会后退一层。`, 'good');
+      log(state, `${RING_NAMES[r]}放置弹簧绊狼夹，触发后向外弹退一层。`, 'good');
+    } else if (key === 'net') {
+      if (state.wood < 1 || state.coins < 3) return { ok: false, message: '冰淇淋黏网需要1木材和3金币。' };
+      if (state.nets[r] >= 2) return { ok: false, message: '这一圈最多可放2张黏网。' };
+      state.wood--; state.coins -= 3; state.nets[r]++;
+      log(state, `女儿留下的冰淇淋成了黏网：${RING_NAMES[r]}放置1张。`, 'good');
+    } else if (key === 'tower') {
+      if (state.wood < 2 || state.stone < 1 || state.coins < 2) return { ok: false, message: '弹弓哨塔需要2木材、1石材和2金币。' };
+      if (state.towers[r] >= 2) return { ok: false, message: '哨塔已达到2级。' };
+      state.wood -= 2; state.stone--; state.coins -= 2; state.towers[r]++;
+      log(state, `${RING_NAMES[r]}弹弓哨塔升至${state.towers[r]}级，每级每回合发射1次。`, 'good');
+    } else if (key === 'alarm') {
+      if (state.wood < 1 || state.stone < 2 || state.coins < 3) return { ok: false, message: '月光警报铃需要1木材、2石材和3金币。' };
+      if (state.alarms[r] >= 1) return { ok: false, message: '该防线已经有警报铃。' };
+      state.wood--; state.stone -= 2; state.coins -= 3; state.alarms[r] = 1;
+      state.alarmCooldowns[r] = 0;
+      log(state, `${RING_NAMES[r]}装上月光警报铃，每隔3回合吓住一只狼。`, 'good');
     } else return { ok: false, message: '未知工程行动。' };
     state.actions--;
     return { ok: true };
@@ -256,6 +306,7 @@
     wolf.kind = 'dog';
     wolf.ring = Math.max(0, from - 1);
     wolf.attack = 0;
+    wolf.courage = 0;
     wolf.dogTurns = 2;
     wolf.stunned = 0;
     state.selectedWolf = null;
@@ -268,9 +319,43 @@
 
   function endTurn(state) {
     if (state.phase !== 'defend') return { ok: false, message: '目前不能结束回合。' };
-    const event = { attacked: [], retreats: [], damageHouse: 0, spawned: [], dawn: false, ended: false };
+    const event = { attacked: [], retreats: [], damageHouse: 0, spawned: [], dawn: false, ended: false,
+      projectiles: [], netted: [], trapped: [], alarms: [], repelled: [] };
+    // Permanent, non-lethal defenses act before wolf attacks. Targeting is deterministic.
+    const repelled = new Set();
+    for (let i = 0; i < 3; i++) {
+      for (let shot = 0; shot < state.towers[i]; shot++) {
+        const candidates = state.wolves.filter(w => w.kind !== 'dog' && w.ring === i + 1 && !repelled.has(w.id))
+          .sort((a,b) => b.attack - a.attack || a.courage - b.courage || a.id - b.id);
+        if (!candidates.length) break;
+        const victim = candidates[0];
+        victim.courage = Math.max(0, victim.courage - 1);
+        state.defenseStats.shots++;
+        event.projectiles.push({ wolfId: victim.id, ring: i, courage: victim.courage });
+        if (victim.courage === 0) {
+          repelled.add(victim.id);
+          event.repelled.push(victim.id);
+          state.defenseStats.scared++;
+          state.score += 25;
+          log(state, `狼${victim.id}被弹弓哨塔吓破胆，掉头跑进森林。`, 'good');
+        }
+      }
+    }
+    for (let i = 0; i < 3; i++) {
+      state.alarmCooldowns[i] = Math.max(0, state.alarmCooldowns[i] - 1);
+      if (!state.alarms[i] || state.alarmCooldowns[i] !== 0) continue;
+      const victim = state.wolves.filter(w => w.kind !== 'dog' && w.ring === i + 1 &&
+        !repelled.has(w.id) && w.stunned <= 0).sort((a,b) => b.attack - a.attack || a.id - b.id)[0];
+      if (!victim) continue;
+      victim.stunned = 2;
+      state.alarmCooldowns[i] = 3;
+      state.defenseStats.alarms++;
+      event.alarms.push(victim.id);
+      log(state, `月光警报铃轰然响起！狼${victim.id}愣在原地，漏掉两次攻击。`, 'good');
+    }
     const survivors = [];
     for (const wolf of state.wolves) {
+      if (repelled.has(wolf.id)) continue;
       if (wolf.kind === 'dog') {
         wolf.dogTurns--;
         if (wolf.dogTurns <= 0) {
@@ -291,7 +376,15 @@
         wolf.ring = Math.max(0, wolf.ring - 1);
         wolf.stunned = 1;
         event.retreats.push(wolf.id);
-        log(state, `狼${wolf.id}踩中陷阱，被弹回外围一层！`, 'good');
+        event.trapped.push(wolf.id);
+        state.defenseStats.springs++;
+        log(state, `狼${wolf.id}踩中弹簧夹，被弹回外围一层！`, 'good');
+      } else if (state.nets[wallIndex] > 0) {
+        state.nets[wallIndex]--;
+        wolf.stunned = 1; // This attack turn is skipped; next turn is skipped by the stunned guard.
+        state.defenseStats.nets++;
+        event.netted.push(wolf.id);
+        log(state, `狼${wolf.id}被冰淇淋黏网黏住：今天不拆家，明天也休息。`, 'good');
       } else if (state.walls[wallIndex] > 0) {
         const actual = Math.min(wolf.attack, state.walls[wallIndex]);
         state.walls[wallIndex] = Math.max(0, state.walls[wallIndex] - wolf.attack);
@@ -376,8 +469,8 @@
   }
 
   return {
-    TOTAL_TURNS, PER_NIGHT, RING_NAMES, MAX_WALLS, DICE_FACES,
-    newGame, makeQuestion, answerQuestion, rollDice, skipDice, takeAction, flashWolf, endTurn,
+    TOTAL_TURNS, PER_NIGHT, RING_NAMES, MAX_WALLS, MAX_DEFENSE, DEFENSE_ITEMS, DICE_FACES,
+    newGame, migrateSave, makeQuestion, answerQuestion, rollDice, skipDice, takeAction, flashWolf, endTurn,
     scoreLabel, getWolfName, nightOf
   };
 });

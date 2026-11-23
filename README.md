@@ -1,103 +1,73 @@
-# 算数不好，狼就会来！ / Wolf Math Defense
+# 算数不好，狼就会来！ · WatchOutWolf v1.2.0
 
-一个原创、可离线游玩的数学塔防喜剧小游戏。**同时提供网页版（PWA）和 Android 离线应用源码**。网页版现已试玩验证；Android 项目包含完整构建材料和 GitHub Actions 自动构建工作流。
+**同一款离线数学塔防游戏，两套可立即切换的视觉风格。** Windows / macOS 浏览器、iPhone Safari PWA、Android APK 使用相同的规则引擎与网页版 UI。
 
-## 游戏故事
+项目仓库：[IvanChen-ctrl/watchoutwolf](https://github.com/IvanChen-ctrl/watchoutwolf)
 
-女儿先到了外婆家。孙子边走边打游戏，外婆问：“来看我，怎么还不放下游戏机？”孙子说：“我在练数学，狼来了能拿建材防守！”结果狼真的来了。
+## 核心设定
 
-答对数学应用题可领取金币、木材，买材料修缮三层防御工事。答错时可以放弃奖励，也可以冒险掷六面命运骰。幸运掷到5或6，便能拿到手电筒：照中一只狼，它立刻变成吉娃娃，并从当前防御圈自动退回**外面一圈**；原本就在最外圈，则退到森林。吉娃娃不再攻击，稍后会自行逃走。
+外婆在家，女儿早已经到屋内，孙子随后一边走一边玩**唯一一台掌机**。床下藏着丑娘，她还记着女儿给过的冰淇淋，想报答。狼来袭时，孙子需要答对建材数学题来挣钱和修筑防线；答错可以放弃奖励或掷公平的六面命运骰，幸运得到的手电筒可以把狼照成吉娃娃，使其自动后退**一整圈**（最外圈退入森林）。游戏走惊悚冷幽默路线，不含真实赌博、流血或内购。
 
-## 实际游戏规则（v1.1）
+## v1.2 双画风
 
-- **目标**：存活18回合、守住3个夜晚。每6回合进入下一夜，外婆补充少量物资、修补防线，狼群退场。
-- **每回合**：1道数学材料题 ->（如果答错，可选择掷骰或安全跳过）-> 最多2次工程行动 -> 狼群行动。
-- **答对**：获得 `3 + 当前夜数` 枚金币、1块木材；连续答对4道题额外奖励手电电量1格（最多5格）。
-- **答错**：无常规奖励。命运骰六个面等概率：1=小屋-2生命和新狼；2=落空；3=木材+1；4=金币+2；5=手电+1格；6=手电+2格。
-- **木材采购**：4金币兑换2木材，消耗1次工程行动。
-- **石材采购**：5金币兑换1石材，消耗1次工程行动。
-- **防线加固**：2木材，将选定防线耐久提升最多4点，消耗1次工程行动。
-- **房屋修理**：3木材，提升小屋生命最多4点，消耗1次工程行动。
-- **布陷阱**：1木材+1石材，当前圈增加1个陷阱（每圈最多2个）；踩中的狼后退一圈并暂时停止攻击；消耗1次工程行动。
-- **手电**：每次消耗1格电量，不占工程行动次数。只对野狼有效，对吉娃娃不能重复使用。
-- **狼群**：一般从外圈进入；第二、三夜的随机钻地狼可能绕过外圈。三层防线耐久耗尽后，狼可继续接近小屋；到达内圈缺口时会直接伤害小屋。
-- **模式**：轻松 / 惊悚进阶（后者初始防线较弱、随机狼较多，并在第三夜出现狼王）。
-- **保存**：浏览器或 Android WebView 本地保存进度，无注册、无账号、无联网调用。
+**🧮 经典堡垒**：明亮易读的卡通 2D 城防地图，适合直接玩数学塔防。
 
-## 网页版使用
+**🎬 丑狼短剧**：从已有丑狼喜剧设定改编的电影感 **2.5D Canvas 视觉皮肤**：午夜外婆木屋、体积感的层叠山林、暖色窗光、错位眼睛和歪耳朵丑狼、床底眼睛、夜色烟雾、胶片边框和单条短剧台词字幕。两种风格复用同一战斗模型，随时切换不暂停、不重新开始、不清空进度。画风选择另行写入本地存储。
 
-### 最简单：单文件离线版
+**说明**：短剧版目前是为游戏重新绘制的程序化 2.5D 美术，不是直接导入过去视频里的 3D FBX/动画模型，因此不是原视频的一比一复刻。
 
-打开 `web/play.html`。所有 HTML/CSS/JS 都内嵌在一个文件中，电脑浏览器无需服务端即可游玩。如果移动系统仅允许预览而不执行 HTML，请改用下述 HTTPS 部署方式。
+## 防御与武器（每回合最多 2 次工程行动）
 
-### 苹果手机 Safari / iPad
+| 装备 | 成本 | 每圈上限 | 效果 |
+|---|---|---:|---|
+| ⚙ 弹簧绊狼夹 | 木材 1 + 石材 1 | 2 个 | 一次性，狼退回外层并停一回合 |
+| 🕸 冰淇淋黏网 | 木材 1 + 金币 3 | 2 张 | 一次性，狼连续两次攻击被阻止 |
+| 🎯 弹弓哨塔 | 木材 2 + 石材 1 + 金币 2 | 2 级 | 每级每回合使本圈一只狼胆量 −1；胆量归零自动逃走 |
+| 🔔 月光警报铃 | 木材 1 + 石材 2 + 金币 3 | 1 座 | 永久设施，待机时打断本圈一只狼两轮攻击，随后冷却 3 回合 |
+| 🏗 加固防线 | 木材 2 | 各圈耐久上限 | 当前选中防线最多 +4 耐久 |
+| ♥ 修理小屋 | 木材 3 | 生命上限 15 | 小屋最多恢复 4 点生命 |
+| 🪵 采购木材 | 金币 4 | — | 木材 +2 |
+| ⬡ 采购石材 | 金币 5 | — | 石材 +1 |
+| 🔦 特殊手电筒 | 1 格电量 | — | **不耗工程次数**；目标狼变吉娃娃并退到外围一圈 |
 
-1. 将整个 `web/` 文件夹部署在 HTTPS 静态网站上（例如 GitHub Pages、Cloudflare Pages、Netlify 等）并打开 `index.html`。
-2. 在 iPhone Safari 打开该网址，点击“分享” -> “添加到主屏幕”。
-3. 从主屏幕启动网页游戏。首次成功加载并缓存后可离线使用。某些隐私模式/清理浏览器数据可能会清除本地存档。
+**战斗顺序**：弹弓哨塔 → 月光警报铃 → 弹簧夹 / 冰淇淋黏网 → 狼攻击墙体或小屋。被照成吉娃娃的目标不再承受武器攻击，两个回合后逃走。每层陷阱和设施彼此独立，绕后狼仍可能穿过外圈。
 
-使用 `python3 -m http.server 8080 --directory web` 可以在电脑上本地测试。手机访问需要能从手机访问到该服务器，且 PWA 添加到主屏幕仍建议使用 HTTPS 域名。
+## 关卡与随机性
 
-## Android APK 构建
+- 共 18 回合、3 个夜晚，每个夜晚 6 回合。日出时有少量资源与耐久补给，狼退回树林。
+- 答对建材应用题获得 `3 + 当前夜数` 金币和木材 1；连对 4 题获得 1 格手电电量。
+- 答错后可安全跳过，或掷六面命运骰：1 灾厄（小屋 −2 且增加狼），2 落空，3 木材 +1，4 金币 +2，5 手电 +1，6 手电 +2。等概率，每面 1/6。
+- 轻松 / 惊悚进阶两档难度；第三夜会有绕后狼及进阶狼王。
+- 不同种类的狼有不同胆量；哨塔使其胆量逐步下降，非致命“劝退”而不是杀死。
 
-### 方法 A：GitHub Actions 云端自动构建（推荐）
+## 在线、离线与 Android
 
-1. 源码位于 GitHub [IvanChen-ctrl/watchoutwolf](https://github.com/IvanChen-ctrl/watchoutwolf)，仓库的 `.github/workflows/build-android.yml` 可以自动编译。
-2. 进入仓库的 `Actions` -> `Build offline Android APK` -> `Run workflow`。
-3. 待构建结束，打开任务详情，在 `Artifacts` 区下载 `WatchOutWolf-Android-v1.1-debug-APK`。
-4. 解压得到 `app-debug.apk`，在自己的 Android 手机上按系统提示安装。首次侧载可能需要授权“允许从此来源安装”。
+**免安装试玩**：打开 `web/play.html`，这是自包含 HTML；适合桌面浏览器，也可从支持本地 HTML 执行的移动浏览器运行。
 
-**注意**：Actions 生成的为 Android 调试签名 APK，适合自己试玩，不是上架商店用的发布签名包。正式发布须生成密钥、签名 Release、测试和遵守发布平台要求。
+**iPhone Safari / iPad**：把 `web/` 部署到 HTTPS 静态站点。仓库已提供 `.github/workflows/publish-web.yml` 用于 GitHub Pages。启用 Settings → Pages → GitHub Actions，并在 Actions 中手动运行 `Publish iPhone and browser version to GitHub Pages`。Safari 打开部署后的 URL，使用分享 → 添加到主屏幕。安装后离线缓存可以游玩。
 
-### 方法 B：本地 Android Studio / Gradle
+**Android**：下载 GitHub Actions 的 `WatchOutWolf-Android-v1.2-debug-APK` 产物，解压安装 `app-debug.apk`（调试签名，仅测试）。可以在 Android Studio 中打开 `android/`。本地需求：JDK 17、Gradle 8.10.2、Android SDK 35 / Build Tools 35.0.0；在仓库根运行 `python3 tools/sync_web.py`，再运行 `gradle --project-dir android :app:assembleDebug`。
 
-- Java 17 / Gradle 8.10.2 / Android SDK 35 和 Build Tools 35.0.0。
-- 在 Android Studio 打开 `android/` 项目，确保能访问 Google Maven、Maven Central 下载 Android Gradle Plugin 8.7.3。
-- 命令行在仓库根目录运行 `python3 tools/sync_web.py`，再在 `android/` 下运行 `gradle :app:assembleDebug`。
-- 生成文件在 `android/app/build/outputs/apk/debug/app-debug.apk`。
-- Android 包名 `com.moonfence.wolfmath`，最低 Android 7.0（API 24），目标 API 35。
+包名 `com.moonfence.wolfmath`，Android 最低 API 24。Android 使用不请求联网权限的内置 WebView，离线加载 `assets/www`。未收集账号、无购买、无外部音频或 CDN。
 
-Android 端使用无联网权限的 WebView 和内置资产拦截器，原始素材打包在 APK 内。游戏逻辑与网页版共用同一份源码。
+## 工程与测试
 
-## 目录
-
-```text
-web/index.html                 PWA入口
-web/play.html                  单文件直接试玩
-web/styles.css                 全部UI样式
-web/js/engine.js               纯游戏规则引擎
-web/js/app.js                  控制、矢量画面和音效
-web/manifest.webmanifest       PWA安装描述
-web/sw.js                      离线缓存
-android/                       Android Studio工程（Java WebView）
-.github/workflows/build-android.yml   APK云端构建
-scripts (tools/)               源码同步与生成单文件版
-tests/test_engine.cjs           规则与平衡回归测试
+```
+web/index.html                      PWA 启动页
+web/play.html                       自包含 HTML 试玩
+web/js/engine.js                    独立规则引擎与 v1 存档迁移
+web/js/app.js                       交互、双画风 Canvas 与音效
+web/styles.css                      响应式 UI 与两套主题
+web/sw.js                           离线缓存
+android/                            Android Studio 离线 App
+.github/workflows/build-android.yml GitHub 自动测试 + 生成 APK
+.github/workflows/publish-web.yml   GitHub Pages 手动部署
+tests/test_engine.cjs               确定性规则单元测试 + 800 场模拟
+测试脚本 test_browser.py             Chromium 手机触屏回归
 ```
 
-## 测试及限制
+运行 `node tests/test_engine.cjs` 和 `python3 tests/test_browser.py`（后者需 Playwright + Chromium）。每次发布前运行 `python3 tools/build_onefile.py` 重新生成 `web/play.html`，`python3 tools/sync_web.py` 与 Android 资产同步。测试结果见 `QA_REPORT.md`。
 
-- 已通过 Node.js 规则单元测试、题目答案有效性检测、18回合状态机验证和模拟对局。
-- 已通过 Chromium 的桌面与移动触屏 UI 交互测试（包含答错、骰子、资源采购、加固、防线点击与手电变身），320px / 390px 宽度未出现横向溢出。
-- 已验收 `web/play.html` 自包含结构，不依赖 CDN 或其他网络资源。
-- **此执行环境没有安装 Android SDK、Gradle，且无法访问外部软件下载站。因此尚未实际生成或在实体 Android / iOS 设备上回归测试 APK。** Android 工程是可供 Android Studio 或 GitHub Actions 编译的源码，不能把源码 ZIP 当成 APK 直接安装。
-- iPhone Safari PWA 流程在设计上兼容主屏幕安装，但未在实体 iPhone Safari 上测试。
-- 游戏无付费抽奖、没有真实博彩或武器元素；“俄罗斯轮盘式紧张感”仅通过命运骰的游戏风险呈现。
+**兼容性**：继续使用 v1.1 的存储 key，加载旧版 `version: 1` 存档时自动补充新装备字段，不丢失原回合、资源与狼状态；风格选择单独保存。若浏览器清空站点数据，存档仍可能丢失。
 
-## 技术与授权
-
-全部游戏界面、角色绘制、音效和代码为本项目专门创建的原创素材；无第三方字体或联网资源。允许自行修改、分享和个人使用。版本 `1.0.0`。
-
-## GitHub Pages：苹果手机可直接打开
-
-本仓库包含 `.github/workflows/publish-web.yml`。在 GitHub 仓库 `Settings → Pages` 中把发布源设置为 **GitHub Actions**，然后在 `Actions → Publish iPhone and browser version to GitHub Pages → Run workflow` 发布。待运行成功，以工作流显示的实际 URL 为准。苹果 Safari 可点击分享 →「添加到主屏幕」。在未成功发布前，不要将预期 URL 当成已上线地址。
-
-## v1.1 回归修订（watchoutwolf）
-
-- 修复狼群雷达中的「🔦 照射」快捷按钮：现始终照射用户刚刚点击的那只狼，不再被之前选中的狼覆盖。
-- 修复命运骰数字与彩色扇区的角度错位；结果掷出后立即本地保存，避免游戏中断时重复掷骰。
-- 修复最外圈陷阱：狼被弹进森林，下一次狼群行动时会彻底离开，不会悄悄走回第一圈。
-- 调整 PWA 离线缓存为 v1.1，页面导航优先联网、离线回退本地缓存，避免旧首页长期滞留。
-- 新增游戏状态、概率骰子、陷阱边界与 UI 源码完整性自动回归，以及 Chromium 触屏操作脚本 `tests/test_browser.py`。GitHub Actions 在编译 APK 前执行 Node 测试，编译后检查 APK 内容。
-
-本版本仍为调试签名 APK；通过 GitHub Actions 构建成功不等于已在实体手机上完成安装和操作验收。
+**验收边界**：仓库构建/本地自动化测试不等同于真实 Android / iPhone 实机验收。短剧风格不是原影片素材的逐帧复刻。正式上架还需发布签名及商店相关工作。

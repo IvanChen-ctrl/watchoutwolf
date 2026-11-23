@@ -1,10 +1,8 @@
-Wolf Math Defense - Web Edition
+WatchOutWolf v1.2.0 | 算数不好，狼就会来！
 
-1. EASY OFFLINE PLAY: open play.html in a browser (one self-contained file).
-2. HOSTED PWA: upload all files in this directory to an HTTPS static host,
-   then open index.html in Safari/Chrome.
-3. iPhone: Safari -> Share -> Add to Home Screen.
-4. Game saves locally in the browser. Clear browser site data to erase saves.
-5. No sign-in, external assets, analytics, or in-app payments.
+打开 index.html 以启用 PWA，或打开 play.html 即可试玩单文件离线版。
+玩法：18 回合三夜守家，答题换建材，失败可掷公平命运骰。手电筒使狼变吉娃娃并退回外围一整圈。
+防御：弹簧绊狼夹、冰淇淋黏网、二级弹弓哨塔、月光警报铃。
+画风：经典堡垒 / 丑狼短剧（2.5D 电影感），可即时切换，不改变游戏进度。
 
-For the Android source project and build directions, see ../README.md.
+在 iPhone Safari 中安装主屏幕应用须将 web/ 通过 HTTPS 部署（如 GitHub Pages）。

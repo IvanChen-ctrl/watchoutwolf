@@ -214,4 +214,125 @@ for (const mode of ['easy','nightmare']) {
     console.log('BALANCE',mode,'accuracy=',accuracy,'wins=',victories,'/200','avgWinnerHouse=',victories?(avgHouse/victories).toFixed(1):'-');
   }
 }
+// v1.2 arsenal and backward-compatible saves.
+test('version 1 saves upgrade without resetting seed, progress or wolves', () => {
+  const old=E.newGame('easy',1234);
+  E.answerQuestion(old,old.question.answer); old.turn=5;old.seed=987654;
+  delete old.nets;delete old.towers;delete old.alarms;delete old.alarmCooldowns;delete old.defenseStats;
+  for(const w of old.wolves){delete w.courage;delete w.maxCourage;}
+  old.version=1;
+  const loaded=E.migrateSave(JSON.parse(JSON.stringify(old)));
+  assert.equal(loaded.version,2); assert.equal(loaded.turn,5);assert.equal(loaded.seed,987654);
+  assert.deepEqual(loaded.nets,[0,0,0]);assert.deepEqual(loaded.towers,[0,0,0]);
+  assert.equal(loaded.wolves[0].courage,3);assert.equal(loaded.wolves[0].id,old.wolves[0].id);
+  assert.equal(E.migrateSave(null),null);
+});
+
+test('defense catalogue has four distinct non-lethal equipment types',()=>{
+  assert.deepEqual(Object.keys(E.DEFENSE_ITEMS).sort(),['alarm','net','tower','trap']);
+  assert.equal(E.DEFENSE_ITEMS.tower.limit,2);
+  assert.equal(E.MAX_DEFENSE.alarms,1);
+});
+
+test('ice cream net consumes wood and coins, blocks two attack turns',()=>{
+  const s=E.newGame('easy',360);
+  E.answerQuestion(s,s.question.answer);
+  const initial=[s.wood,s.coins,s.actions,s.walls[0]];
+  assert.equal(E.takeAction(s,'net',0).ok,true);
+  assert.deepEqual([s.wood,s.coins,s.actions,s.nets[0]],[initial[0]-1,initial[1]-3,initial[2]-1,1]);
+  s.wolves=[s.wolves[0]];
+  E.endTurn(s);
+  assert.equal(s.walls[0],initial[3]);assert.equal(s.nets[0],0);assert.equal(s.wolves[0].stunned,1);
+  s.wolves=[s.wolves[0]];
+  E.answerQuestion(s,s.question.answer);
+  E.endTurn(s);
+  assert.equal(s.walls[0],initial[3]);assert.equal(s.wolves[0].stunned,0);
+  s.wolves=[s.wolves[0]];
+  E.answerQuestion(s,s.question.answer);
+  E.endTurn(s);
+  assert.equal(s.walls[0],initial[3]-2);
+  assert.equal(s.defenseStats.nets,1);
+});
+
+test('sling towers have two levels and repel by courage before the attack',()=>{
+  const s=E.newGame('easy',361);
+  E.answerQuestion(s,s.question.answer);
+  s.coins=30;s.wood=30;s.stone=30;
+  assert.equal(E.takeAction(s,'tower',0).ok,true);
+  assert.equal(E.takeAction(s,'tower',0).ok,true);
+  assert.deepEqual(s.towers,[2,0,0]);
+  assert.equal(s.actions,0);
+  assert.equal(E.takeAction(s,'tower',0).ok,false);
+  const id=s.wolves[0].id;
+  let event=E.endTurn(s).event;
+  assert.equal(event.projectiles.length,2);
+  assert.equal(s.wolves.find(w=>w.id===id).courage,1);
+  assert.equal(s.walls[0],5); // tower lowers morale; an unrepelled wolf still attacks
+  s.wolves=s.wolves.filter(w=>w.id===id);
+  E.answerQuestion(s,s.question.answer);
+  event=E.endTurn(s).event;
+  assert.equal(event.repelled.includes(id),true);
+  assert.equal(s.wolves.some(w=>w.id===id),false);
+  assert.equal(s.defenseStats.scared,1);
+});
+
+test('alarm stuns for two turns and enters a three-turn cooldown',()=>{
+  const s=E.newGame('easy',362);
+  E.answerQuestion(s,s.question.answer);
+  s.coins=10;s.wood=10;s.stone=10;
+  assert.equal(E.takeAction(s,'alarm',0).ok,true);
+  const id=s.wolves[0].id,initialWall=s.walls[0];
+  let event=E.endTurn(s).event;
+  assert.deepEqual(event.alarms,[id]);assert.equal(s.alarmCooldowns[0],3);
+  assert.equal(s.walls[0],initialWall);assert.equal(s.wolves.find(w=>w.id===id).stunned,1);
+  s.wolves=s.wolves.filter(w=>w.id===id);
+  E.answerQuestion(s,s.question.answer);E.endTurn(s);
+  assert.equal(s.alarmCooldowns[0],2);assert.equal(s.walls[0],initialWall);
+  s.wolves=s.wolves.filter(w=>w.id===id);
+  E.answerQuestion(s,s.question.answer);E.endTurn(s);
+  assert.equal(s.alarmCooldowns[0],1);assert.equal(s.walls[0],initialWall-2);
+  s.wolves=s.wolves.filter(w=>w.id===id);
+  E.answerQuestion(s,s.question.answer);event=E.endTurn(s).event;
+  assert.deepEqual(event.alarms,[id]);assert.equal(s.defenseStats.alarms,2);
+});
+
+test('equipment costs and capacity limits enforce no partial transaction',()=>{
+  const s=E.newGame('easy',363);
+  E.answerQuestion(s,s.question.answer);
+  const before=JSON.stringify({wood:s.wood,stone:s.stone,coins:s.coins,actions:s.actions});
+  for(const key of ['trap','tower','alarm'])assert.equal(E.takeAction(s,key,2).ok,false);
+  assert.equal(JSON.stringify({wood:s.wood,stone:s.stone,coins:s.coins,actions:s.actions}),before);
+  s.coins=99;s.stone=99;s.wood=99;
+  assert.equal(E.takeAction(s,'net',2).ok,true);
+  assert.equal(E.takeAction(s,'net',2).ok,true);
+  s.actions=1;
+  const resources=JSON.stringify([s.wood,s.stone,s.coins,s.actions]);
+  assert.equal(E.takeAction(s,'net',2).ok,false);
+  assert.equal(JSON.stringify([s.wood,s.stone,s.coins,s.actions]),resources);
+});
+
+test('per-ring structures do not automatically work on the neighboring ring',()=>{
+  const s=E.newGame('easy',364);
+  E.answerQuestion(s,s.question.answer);
+  s.stone=10;s.wood=10;s.coins=10;
+  E.takeAction(s,'tower',1);
+  s.wolves[0].ring=1;
+  const event=E.endTurn(s).event;
+  assert.equal(event.projectiles.length,0);
+  assert.equal(s.towers[0],0); assert.equal(s.towers[1],1);
+});
+
+test('non-lethal tower never damages or shoots a transformed Chihuahua',()=>{
+  const s=E.newGame('easy',365);
+  E.answerQuestion(s,s.question.answer);
+  s.stone=5;s.wood=10;s.coins=10;
+  E.takeAction(s,'tower',0);
+  s.charges=1;
+  E.flashWolf(s,s.wolves[0].id);
+  s.wolves[0].ring=1; // ensure that the dog remains inside the attack range
+  const event=E.endTurn(s).event;
+  assert.equal(event.projectiles.length,0);
+  assert.equal(s.wolves[0].kind,'dog');
+});
+
 console.log(`Passed ${tests} engine test suites.`);

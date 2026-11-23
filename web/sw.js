@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wolfmath-offline-v1.1';
+const CACHE_NAME = 'wolfmath-offline-v1.2';
 const FILES = [
   './', './index.html', './styles.css', './js/engine.js', './js/app.js',
   './manifest.webmanifest', './icons/favicon.svg', './icons/icon-192.png', './icons/icon-512.png'
