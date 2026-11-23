@@ -1,0 +1,14 @@
+# Android and test build files
+.gradle/
+android/.gradle/
+**/build/
+.idea/
+*.iml
+local.properties
+*.apk
+*.aab
+*.keystore
+*.jks
+__pycache__/
+*.pyc
+.DS_Store
