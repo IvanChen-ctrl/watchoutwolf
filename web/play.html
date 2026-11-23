@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10192c">
+  <meta name="description" content="答数学题筹建材，守住外婆的小屋。答错还能掷命运骰，抽到手电筒让狼变吉娃娃！">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="狼来了·算数防线">
+  <style>
+:root{color-scheme:dark;--bg:#080f1c;--panel:#141d31;--panel-2:#19243a;--panel-3:#202c44;--line:#33405d;--muted:#9bacbe;--text:#f8f4e9;--cream:#ffe4ac;--gold:#f6ba55;--green:#9bdfb3;--red:#f47c80;--blue:#98c5f5;--shadow:rgba(0,0,0,.38);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+*{box-sizing:border-box}html{background:var(--bg);overscroll-behavior:none}body{margin:0;color:var(--text);min-height:100vh;background:radial-gradient(ellipse at 17% -12%,#293d62 0%,transparent 42%),radial-gradient(ellipse at 100% 80%,#1d2a43 0%,transparent 45%),#080f1c;font-size:15px}button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible,canvas:focus-visible{outline:3px solid #ffce69;outline-offset:2px}button:disabled{cursor:not-allowed;filter:saturate(.55);opacity:.4}h1,h2,p{margin:0}h2{font-size:18px;letter-spacing:.03em}.hidden{display:none!important}.app-shell{max-width:1320px;margin:auto;padding:0 25px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0 18px;border-bottom:1px solid rgba(180,202,232,.15)}.brand{text-decoration:none;color:inherit;display:flex;align-items:center;gap:12px;min-width:0}.brand-badge{height:48px;width:48px;display:grid;place-items:center;flex-shrink:0;border-radius:15px;font-size:27px;background:linear-gradient(145deg,#3a4d6b,#1c2a46);box-shadow:inset 0 0 0 1px #506481}.brand-text{display:flex;flex-direction:column;gap:3px;min-width:0}.brand strong{font-size:21px;font-weight:850;letter-spacing:.04em;white-space:nowrap}.brand small{color:#95a9c5;font-size:10px;letter-spacing:.2em;font-weight:750}.header-actions{display:flex;align-items:center;gap:9px}.icon-button,.ghost-button{height:38px;min-width:38px;padding:0 12px;color:#dbe6f8;background:#1a263c;border:1px solid #3a4b66;border-radius:11px}.icon-button{font-size:22px}.icon-button.off{opacity:.45}.ghost-button{font-size:13px;font-weight:700}.main-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(340px,.97fr);gap:23px;padding-top:23px;align-items:start}.game-column,.action-column{min-width:0;display:flex;flex-direction:column;gap:16px}.status-line{display:flex;gap:13px;align-items:center;justify-content:space-between;min-height:30px;padding:0 2px}.night-summary{display:flex;gap:10px;align-items:baseline;font-weight:900;font-size:18px}.night-summary small{color:var(--muted);font-size:12px;font-weight:600}.twinkle{color:var(--gold);font-size:20px}.phase-display{color:#cee6fc;font-size:12px;font-weight:700;background:#253551;border:1px solid #3b4f6c;border-radius:25px;padding:5px 11px;white-space:nowrap}.phase-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#9be4af;box-shadow:0 0 8px #9be4af;margin-right:6px}.score-mini{color:var(--gold);font-weight:850;font-size:13px;white-space:nowrap}.battle-frame{position:relative;overflow:hidden;border-radius:22px;border:1px solid #34445c;background:#0c1b2d;box-shadow:0 15px 55px rgba(0,0,0,.27),inset 0 0 0 1px rgba(255,255,255,.02);touch-action:manipulation}.battle-frame canvas{display:block;aspect-ratio:5/3;width:100%;height:auto;cursor:crosshair;touch-action:manipulation}.canvas-overlay-top{position:absolute;top:13px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:9px;pointer-events:none}.house-health,.flash-badge{background:rgba(12,22,39,.84);backdrop-filter:blur(10px);border:1px solid #55647b;box-shadow:0 3px 18px #0005;border-radius:13px;display:flex;align-items:center}.house-health{padding:8px 10px;gap:9px}.health-heart{color:#f9908c;font-size:20px}.health-details{min-width:100px;display:flex;flex-direction:column;gap:4px}.health-details span{font-size:11px;font-weight:700;color:#ecf2fb}.health-meter{background:#303b50;border-radius:5px;overflow:hidden;height:5px}.health-meter>div{height:100%;width:100%;background:linear-gradient(90deg,#fc7772,#ffb891);transition:width .35s ease}.house-health b{font-size:11px;color:#fff5dc}.flash-badge{font-size:12px;padding:10px 12px;gap:6px;color:#fff0c8;font-weight:800}.canvas-overlay-bottom{position:absolute;bottom:11px;left:14px;right:14px;display:flex;justify-content:space-between;gap:6px;align-items:center;pointer-events:none}.battle-tip{font-size:10px;font-weight:600;color:#c2cfe0;background:rgba(9,17,30,.68);border-radius:8px;padding:7px}.wolf-counter{font-size:11px;font-weight:800;background:rgba(14,24,40,.85);padding:7px 10px;border:1px solid #65748b;border-radius:9px;white-space:nowrap}.impact-layer{position:absolute;inset:0;pointer-events:none;display:grid;place-items:center}.impact-word{color:#fff5cb;text-shadow:0 3px 0 #9e4b64,0 5px 35px #fff6;animation:popImpact .9s ease-out forwards;font-size:clamp(20px,3vw,40px);font-weight:1000;letter-spacing:.1em}@keyframes popImpact{0%{transform:scale(.4) rotate(-10deg);opacity:0}30%{transform:scale(1.18) rotate(4deg);opacity:1}100%{transform:translateY(-55px) scale(1);opacity:0}}
+.resource-strip{background:#141e31;border:1px solid #34425c;display:grid;grid-template-columns:repeat(4,1fr);padding:13px 9px;border-radius:16px;gap:2px;box-shadow:0 6px 25px rgba(0,0,0,.12)}.resource-item{display:flex;justify-content:center;align-items:center;gap:9px;border-right:1px solid #2f3b50;min-width:0}.resource-item:last-child{border-right:0}.resource-item>div{display:flex;flex-direction:column}.resource-item small{font-size:10px;color:#a2b1c7}.resource-item strong{font-size:21px;line-height:1.25;font-weight:900;font-variant-numeric:tabular-nums}.resource-icon{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;font-size:21px;font-weight:900}.resource-icon.coin{color:#f8cf71;background:#5c442d}.resource-icon.wood{color:#e2b37e;background:#523a34}.resource-icon.stone{color:#bac9db;background:#39445a}.resource-icon.battery{color:#f8e27a;background:#555136}.card-surface{background:linear-gradient(150deg,rgba(25,37,57,.96),rgba(16,25,42,.96));border:1px solid #303f59;border-radius:17px;padding:19px}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.section-heading small{color:#90a5bd;font-size:11px;line-height:1.6;text-align:right}.eyebrow{display:block;font-size:9px;line-height:1.8;letter-spacing:.18em;font-weight:900;color:#84a2bf}.ring-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.ring-button{border:1px solid #39495f;border-radius:12px;color:#eaf0fa;background:#1b2a40;text-align:left;padding:11px;display:flex;flex-direction:column;gap:7px;transition:background .2s,border-color .2s}.ring-button.selected{background:#273b51;border-color:#ffcb6c;box-shadow:0 0 0 1px #ffca65 inset}.ring-header{font-size:12px;font-weight:850;display:flex;justify-content:space-between;gap:4px;white-space:nowrap}.ring-name .ring-symbol{margin-right:3px;color:var(--gold)}.ring-health{font-size:12px;color:#d7e6f5;font-variant-numeric:tabular-nums}.ring-meter{background:#0e1b2d;height:6px;overflow:hidden;border-radius:6px}.ring-meter div{height:100%;border-radius:6px;background:linear-gradient(90deg,#74a7a0,#b6e2b1);transition:width .3s}.ring-meter div.critical{background:linear-gradient(90deg,#e17379,#efb16e)}.ring-footer{color:#93a7bf;font-size:10px;display:flex;justify-content:space-between}.story-box{padding-bottom:14px}.book-icon{color:#d6be93}.battle-feed{list-style:none;max-height:156px;overflow:auto;margin:0;padding:0;scrollbar-width:thin}.battle-feed li{display:flex;gap:9px;align-items:flex-start;padding:8px 0;color:#adbed2;font-size:12px;line-height:1.5;border-bottom:1px solid #2c3951}.battle-feed li:last-child{border-bottom:0}.feed-dot{width:6px;height:6px;flex-shrink:0;background:#809bb7;border-radius:50%;margin-top:5px}.feed-dot.good{background:var(--green)}.feed-dot.bad{background:var(--red)}.feed-dot.story{background:var(--gold)}
+.mission-banner{display:flex;align-items:center;gap:12px;padding:15px;background:linear-gradient(115deg,#493c46,#222b44);border:1px solid #70555a;border-radius:15px}.mission-icon{font-size:28px;color:#ffdf9c;line-height:1}.mission-banner strong{font-size:13px;letter-spacing:.07em}.mission-banner p{color:#e8d6ce;font-size:11px;line-height:1.55;margin-top:3px}.phase-panel{min-height:230px}.action-card{border:1px solid #59617a;border-radius:18px;background:linear-gradient(145deg,#263752,#1a273d 75%);box-shadow:0 9px 28px #0003;overflow:hidden}.action-card-header{padding:20px 21px 0;display:flex;justify-content:space-between;gap:9px;align-items:center}.micro-tag{border-radius:7px;font-size:10px;font-weight:900;letter-spacing:.1em;color:#ffe8b7;background:#654e43;padding:6px 9px}.chapter-tag{font-size:10px;color:#a7bed4;letter-spacing:.1em}.question-inner{padding:18px 21px 19px}.question-title{font-size:20px;font-weight:850;line-height:1.6;color:#fff4dd;letter-spacing:.01em;min-height:90px}.answer-label{margin:15px 0 10px;color:#9bb1c9;font-size:11px;font-weight:750;letter-spacing:.05em}.answer-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.answer-option{border:1px solid #62708a;background:#30445f;color:#f4f5fa;border-radius:12px;min-height:62px;font-size:25px;font-weight:850;box-shadow:0 3px 0 #18243a;transition:background .14s,transform .14s}.answer-option:active{transform:translateY(3px);box-shadow:none}.answer-option:hover{background:#425e7c}.action-hint{margin:14px 0 0;font-size:11px;color:#9eb3cb;line-height:1.6}.result-strip{display:flex;gap:9px;align-items:flex-start;margin-bottom:12px;border:1px solid #52736e;background:rgba(45,84,72,.23);border-radius:12px;padding:11px 12px;font-size:11px;line-height:1.5;color:#c7eddf}.result-strip.bad{border-color:#815864;background:#58384045;color:#ffcfce}.result-strip.neutral{border-color:#566881;background:#394a5b40;color:#d9e5f4}.result-strip strong{display:block;font-size:12px;color:#fff;margin-bottom:3px}.result-strip .result-emoji{font-size:20px}.dice-layout{padding:17px 20px 20px}.dice-layout h3{margin:0 0 8px;font-size:22px;color:#ffe8bc}.dice-description{font-size:12px;color:#b5c6dc;line-height:1.7;margin-bottom:15px}.dice-outcomes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:13px 0 16px}.dice-face{background:#293951;border:1px solid #41516c;color:#e3ecfb;display:flex;align-items:center;gap:5px;justify-content:center;border-radius:9px;padding:9px 3px;font-size:10px;font-weight:750}.dice-face span{font-size:16px;font-weight:1000}.dice-face.bad{border-color:#8b5360;color:#ffadb1;background:#5b3442}.dice-face.good{border-color:#5f8b7f;color:#c2f6cd;background:#285451}.dice-face.jackpot{border-color:#cfb366;color:#ffe8a9;background:#685329}.dice-actions{display:grid;grid-template-columns:1.4fr 1fr;gap:9px}.primary-button,.secondary-button{font-weight:900;letter-spacing:.04em;border-radius:11px;padding:14px 13px;min-height:47px;transition:transform .15s,filter .15s}.primary-button{background:linear-gradient(135deg,#ffdd88,#f4aa5c);color:#312430;border:0;box-shadow:0 5px 0 #9f6d42}.secondary-button{background:#2f3c54;color:#dbe5f5;border:1px solid #596882}.primary-button:not(:disabled):active,.secondary-button:not(:disabled):active{transform:translateY(3px);box-shadow:none}.primary-button.large{width:100%;font-size:16px;display:flex;justify-content:center;gap:18px}.defend-header{padding:17px 19px 0;display:flex;align-items:center;justify-content:space-between;gap:10px}.defend-title{font-weight:900;font-size:19px;color:#ffefcc}.remaining-actions{font-size:11px;border:1px solid #5b7069;background:#2a4b47;border-radius:50px;color:#bfe6d9;font-weight:800;padding:7px 10px}.defend-body{padding:12px 19px 19px}.build-choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.build-button{border:1px solid #465774;color:#eef3fd;background:#263750;border-radius:12px;min-height:81px;text-align:left;padding:12px;display:flex;flex-direction:column;gap:6px;position:relative}.build-button:disabled{opacity:.34}.build-button:not(:disabled):hover{background:#324863}.build-button b{font-size:13px}.build-button small{font-size:10px;color:#afc1d9;line-height:1.35}.build-button .build-symbol{font-size:18px;margin-right:4px}.build-button .cost{font-size:10px;color:#ffdb9c;margin-top:auto}.endturn-button{width:100%;border:1px solid #c6a361;color:#fbe9bb;background:#64503a;border-radius:12px;padding:16px;margin-top:14px;font-size:14px;font-weight:950;box-shadow:0 4px 0 #322b28}.endturn-button:active{transform:translateY(3px);box-shadow:none}.attack-warning{font-size:11px;color:#efb0aa;margin-top:12px;line-height:1.5}.targets-panel{padding:16px}.targets-panel .section-heading{margin-bottom:11px}.targets-panel .section-heading h2{font-size:16px}.wolf-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto}.wolf-card{display:flex;align-items:center;gap:8px;border-radius:10px;background:#1f2f47;border:1px solid #334762;padding:9px}.wolf-card.selected{border-color:#efc06e;background:#324357}.wolf-avatar{display:grid;place-items:center;flex-shrink:0;width:37px;height:37px;border-radius:10px;background:#3f455e;font-size:23px}.wolf-avatar.dog{background:#3b4d48}.wolf-details{min-width:0;flex:1}.wolf-details strong{font-size:12px;display:block}.wolf-details small{font-size:10px;color:#a5b7ca;display:block;margin-top:4px}.target-choose{font-size:11px;font-weight:800;background:#3d506b;border:1px solid #71819c;color:#fff2d1;border-radius:8px;padding:9px;white-space:nowrap}.torch-target{background:#5b5237;border-color:#e9c46f;color:#fff0bf}.empty-wolves{color:#9fb2cc;font-size:12px;padding:12px 0;line-height:1.65}.rules-foot{display:flex;gap:8px;color:#768da7;font-size:11px;line-height:1.6;padding:0 7px}.rules-foot span{font-size:18px;color:#a7a3cb}.site-footer{display:flex;justify-content:space-between;gap:12px;font-size:10px;color:#6c829c;padding:23px 0 25px}
+.overlay{position:fixed;inset:0;display:none;justify-content:center;align-items:center;overflow:auto;padding:18px 15px;background:rgba(3,9,17,.88);backdrop-filter:blur(9px);z-index:50}.overlay.visible{display:flex}.dialog-box{width:100%;max-width:520px;background:linear-gradient(145deg,#263650,#141d30);box-shadow:0 40px 100px #000a;border:1px solid #516480;border-radius:26px;padding:27px 28px;position:relative;max-height:calc(100dvh - 34px);overflow-y:auto;scrollbar-width:thin}.intro-dialog{text-align:center}.dialog-art{height:145px;border-radius:17px;background:radial-gradient(ellipse at 50% 40%,#364b73 0%,#202945 45%,#111b31 100%);position:relative;overflow:hidden;margin-bottom:19px}.moon-shape{position:absolute;top:13px;left:47%;height:61px;width:61px;border-radius:50%;background:#ffe3a8;box-shadow:0 0 48px #fada9c66}.dialog-wolf{position:absolute;left:16%;top:46px;font-size:80px;transform:rotate(-10deg);filter:drop-shadow(2px 9px 3px #0005)}.dialog-house{position:absolute;left:48%;top:48px;font-size:83px}.dialog-dog{position:absolute;right:12%;top:65px;font-size:61px;transform:rotate(9deg)}.intro-eyebrow{color:#c7b59a;font-size:11px;font-weight:850;letter-spacing:.09em}.intro-dialog h1{font-size:clamp(30px,5vw,43px);line-height:1.2;letter-spacing:.02em;margin:10px 0 12px;font-weight:1000}.intro-dialog h1 em{color:#ffcb75;font-style:normal}.intro-description{font-size:13px;color:#bbcada;line-height:1.85}.intro-mechanics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:17px 0 19px}.intro-mechanics>div{padding:9px 2px;border:1px solid #43516b;background:#20314b;border-radius:10px;font-size:23px;display:flex;flex-direction:column;gap:4px}.intro-mechanics span{font-size:10px;font-weight:800;color:#e2e5ef}.intro-buttons{display:grid;gap:11px}.continue-button{margin-top:13px;width:100%;border:0;color:#d2e9fd;background:transparent;text-decoration:underline;padding:7px;font-size:12px}.smallprint{color:#8399b5;font-size:10px;line-height:1.7;margin-top:15px}.help-dialog{text-align:left;max-width:570px}.help-dialog h2{font-size:26px;color:#ffe2aa;margin-bottom:15px}.help-dialog ol{padding-left:19px;color:#c7d6e9;font-size:13px;line-height:1.7}.help-dialog li{margin-bottom:10px}.help-dialog b{color:#ffe2aa}.help-note{font-size:12px;color:#b0e3d9;background:#20403f;border:1px solid #386b65;border-radius:12px;padding:12px;line-height:1.7;margin:14px 0}.help-dialog .primary-button{width:100%}.modal-close{position:absolute;right:20px;top:17px;background:none;border:0;color:#e0e5ef;font-size:32px;line-height:1}.end-dialog{text-align:center;max-width:430px}.end-icon{font-size:73px;display:block;margin-bottom:9px}.end-dialog h2{color:#fbe0a2;font-size:33px;margin:7px 0 10px}.end-dialog>p{color:#bbcade;font-size:13px;line-height:1.75}.end-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:24px 0}.end-stats div{padding:16px 9px;background:#1b2b42;border:1px solid #465c74;border-radius:12px}.end-stats strong{font-size:23px;color:#ffe09c;display:block}.end-stats small{font-size:11px;color:#a4b7cc}.toast{position:fixed;z-index:90;bottom:26px;left:50%;transform:translate(-50%,30px);opacity:0;pointer-events:none;background:#fff0c7;color:#423129;box-shadow:0 9px 50px #0007;padding:12px 17px;border-radius:12px;font-size:13px;font-weight:850;line-height:1.5;max-width:min(90vw,530px);min-width:200px;text-align:center;transition:transform .25s,opacity .25s}.toast.visible{transform:translate(-50%,0);opacity:1}.roulette-backdrop{position:fixed;inset:0;background:#050b14e8;display:grid;place-items:center;z-index:80;backdrop-filter:blur(5px)}.roulette-dialog{text-align:center;min-width:280px}.roulette-title{font-size:21px;font-weight:950;letter-spacing:.12em;color:#ffdc9b;margin-bottom:24px}.roulette-wheel{position:relative;height:210px;width:210px;border-radius:50%;margin:auto;background:conic-gradient(#8e4055 0deg 60deg,#394c6d 60deg 120deg,#63745c 120deg 180deg,#6b6248 180deg 240deg,#2a8b78 240deg 300deg,#d5aa60 300deg 360deg);box-shadow:0 0 0 8px #202a3c,0 0 0 11px #dcbd83,0 0 65px #f1d38a50;transition:transform 1.85s cubic-bezier(.13,.71,.21,1)}.roulette-num{position:absolute;left:50%;top:50%;margin-left:-16px;margin-top:-16px;width:32px;height:32px;display:grid;place-items:center;font-size:23px;font-weight:1000;color:white;text-shadow:0 2px 4px #0007}.roulette-pointer{font-size:29px;color:#ffe2a9;position:absolute;z-index:2;top:-25px;left:89px;text-shadow:0 3px #000}.roulette-status{margin-top:26px;font-size:14px;color:#bbd0e2}.roulette-result{font-size:25px;color:#fff0bc;font-weight:950;margin-top:15px;min-height:33px}
+@media(max-width:1120px){.main-layout{grid-template-columns:minmax(0,1.25fr) minmax(320px,.9fr);gap:15px}.app-shell{padding:0 17px}.brand strong{font-size:18px}.mission-banner{padding:12px}}
+@media(max-width:850px){.main-layout{grid-template-columns:1fr;gap:15px}.game-column,.action-column{gap:13px}.action-column{display:contents}.mission-banner{grid-row:1}.status-line{grid-row:2}.battle-frame{grid-row:3}.resource-strip{grid-row:4}.phase-panel{grid-row:5}.defense-box{grid-row:6}.targets-panel{grid-row:7}.story-box{grid-row:8}.rules-foot{grid-row:9}.main-layout{display:grid;grid-template-columns:1fr}.game-column{display:contents}.topbar{padding:13px 0}.phase-panel{min-height:0}.question-title{min-height:auto}.site-footer{padding-top:15px}}
+@media(max-width:470px){.app-shell{padding:0 11px}.topbar{gap:6px}.brand{gap:8px}.brand-badge{height:40px;width:40px;border-radius:12px;font-size:22px}.brand strong{font-size:14px;letter-spacing:0}.brand small{font-size:8px;letter-spacing:.09em}.header-actions{gap:5px}.icon-button,.ghost-button{height:34px;min-width:34px;padding:0 8px;font-size:15px;border-radius:9px}.ghost-button{font-size:11px}.main-layout{padding-top:13px;gap:11px}.night-summary{gap:6px;font-size:15px}.night-summary small{font-size:10px}.status-line{gap:5px}.phase-display{padding:4px 7px;font-size:10px}.score-mini{font-size:11px}.battle-frame{border-radius:14px}.canvas-overlay-top{top:8px;left:7px;right:7px}.house-health{padding:6px;gap:5px;border-radius:9px}.health-details{min-width:80px}.health-details span{font-size:9px}.health-heart{font-size:14px}.house-health b{font-size:9px}.flash-badge{padding:7px;font-size:10px;border-radius:8px}.canvas-overlay-bottom{bottom:7px;left:7px;right:7px}.battle-tip{font-size:8px;padding:5px;max-width:80%}.wolf-counter{font-size:9px;padding:5px}.resource-strip{padding:8px 3px}.resource-item{gap:4px}.resource-item strong{font-size:18px}.resource-icon{height:25px;width:25px;font-size:16px;border-radius:8px}.resource-item small{font-size:9px}.card-surface{padding:13px}.section-heading{margin-bottom:10px}.section-heading small{font-size:9px}.ring-grid{gap:6px}.ring-button{padding:8px 6px;gap:5px}.ring-header{font-size:10px}.ring-health{font-size:10px}.ring-footer{font-size:9px}.section-heading h2{font-size:16px}.mission-banner{gap:8px}.mission-icon{font-size:22px}.mission-banner p{font-size:10px}.question-inner{padding:15px}.action-card-header{padding:14px 15px 0}.question-title{font-size:18px}.answer-option{min-height:59px}.defend-body{padding:10px 14px 15px}.build-button{min-height:80px}.build-button b{font-size:12px}.dialog-box{padding:20px 18px;border-radius:19px}.dialog-art{height:110px}.dialog-wolf{font-size:55px}.dialog-house{font-size:65px;top:37px}.dialog-dog{font-size:43px;top:52px}.moon-shape{height:50px;width:50px}.intro-dialog h1{font-size:30px}.intro-description{font-size:12px}.intro-mechanics{gap:5px}.intro-mechanics>div{font-size:21px}.intro-mechanics span{font-size:9px}.site-footer{font-size:8px}.dice-layout{padding:15px}.rules-foot{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001s!important;transition-duration:.001s!important}}
+
+</style>
+  <title>算数不好，狼就会来！｜狼来了·算数防线</title>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="算数不好狼就会来，返回游戏首页">
+        <span class="brand-badge" aria-hidden="true">🐺</span>
+        <span class="brand-text"><strong>算数不好，狼就会来！</strong><small>WOLF MATH · 防线计划</small></span>
+      </a>
+      <div class="header-actions">
+        <button id="soundBtn" type="button" class="icon-button" aria-label="切换音效" title="切换音效">♫</button>
+        <button id="helpBtn" type="button" class="icon-button" aria-label="游戏说明" title="游戏说明">?</button>
+        <button id="restartBtn" type="button" class="ghost-button">重开</button>
+      </div>
+    </header>
+
+    <div class="main-layout">
+      <section class="game-column" aria-label="堡垒地图和战场">
+        <div class="status-line">
+          <div class="night-summary"><span class="twinkle">✦</span><span id="nightLabel">第 1 夜</span><small id="turnLabel">回合 1 / 18</small></div>
+          <div class="phase-display"><span id="phaseDot" class="phase-dot"></span><span id="phaseLabel">答题中</span></div>
+          <div class="score-mini">★ <span id="scoreLabel">0</span></div>
+        </div>
+
+        <div class="battle-frame" id="battleFrame">
+          <canvas id="gameCanvas" width="1000" height="600" aria-label="狼群与三层防御圈。点狼选中手电目标，点防线选择加固层。" tabindex="0"></canvas>
+          <div class="canvas-overlay-top">
+            <div class="house-health" id="healthBanner" aria-label="小屋生命"><span class="health-heart">♥</span><div class="health-details"><span>外婆的小屋</span><div class="health-meter"><div id="healthFill"></div></div></div><b id="healthText">15 / 15</b></div>
+            <div class="flash-badge" id="flashBadge">🔦 <span>0 格电量</span></div>
+          </div>
+          <div class="canvas-overlay-bottom"><span class="battle-tip">👆 点防线切换加固目标 · 点狼选择照射目标</span><span class="wolf-counter" id="wolfCount">🐺 1 只</span></div>
+          <div id="impactLayer" class="impact-layer" aria-live="polite"></div>
+        </div>
+
+        <div class="resource-strip" id="resources" aria-label="物资">
+          <div class="resource-item"><span class="resource-icon coin">◈</span><div><small>金币</small><strong id="coinsNum">4</strong></div></div>
+          <div class="resource-item"><span class="resource-icon wood">▥</span><div><small>木材</small><strong id="woodNum">3</strong></div></div>
+          <div class="resource-item"><span class="resource-icon stone">⬡</span><div><small>石材</small><strong id="stoneNum">0</strong></div></div>
+          <div class="resource-item"><span class="resource-icon battery">ϟ</span><div><small>手电电量</small><strong id="batteryNum">0</strong></div></div>
+        </div>
+
+        <div class="defense-box card-surface">
+          <div class="section-heading"><div><span class="eyebrow">DEFENSE STATUS</span><h2>三层防线</h2></div><small>点击选中，建造时对该圈生效</small></div>
+          <div id="defenseRings" class="ring-grid"></div>
+        </div>
+        <div class="story-box card-surface"><div class="section-heading"><div><span class="eyebrow">NIGHT WATCH LOG</span><h2>夜巡记录</h2></div><span class="book-icon">☷</span></div><ul id="battleFeed" class="battle-feed" aria-live="polite"></ul></div>
+      </section>
+
+      <aside class="action-column" aria-label="答题、采购与防御行动">
+        <section class="mission-banner"><span class="mission-icon">☾</span><div><strong>今夜任务</strong><p id="missionText">算对数学题，获得建材；算错了，命运骰替你做决定。</p></div></section>
+        <div id="phasePanel" class="phase-panel"></div>
+        <section id="wolfPanel" class="targets-panel card-surface"><div class="section-heading"><div><span class="eyebrow">ENEMY RADAR</span><h2>狼群雷达</h2></div><small id="targetHint">点亮手电，狼秒变吉娃娃</small></div><div id="wolfList" class="wolf-list"></div></section>
+        <section class="rules-foot"><span>◎</span> 数学不是万能的，但狼真的不喜欢手电筒。</section>
+      </aside>
+    </div>
+
+    <footer class="site-footer"><span>独立小游戏 · 离线可玩 · 触屏友好</span><span>无广告 · 无内购 · 无联网账号</span></footer>
+  </div>
+
+  <div class="overlay visible" id="introOverlay" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+    <div class="dialog-box intro-dialog">
+      <div class="dialog-art" aria-hidden="true"><span class="moon-shape"></span><span class="dialog-wolf">🐺</span><span class="dialog-house">🏚️</span><span class="dialog-dog">🐕</span></div>
+      <p class="intro-eyebrow">一个很不讲理、却需要算术的夜晚</p>
+      <h1 id="introTitle">算数不好，<br><em>狼就会来！</em></h1>
+      <p class="intro-description">女儿早已在外婆家，孙子却一路打游戏机。外婆问：‘来了还玩？’孙子答：‘我在练数学防狼！’没想到狼群真的来了。答对题换建材，答错可掷命运骰；运气好抽中手电筒，狼立刻变吉娃娃，退回外面一层防线。</p>
+      <div class="intro-mechanics"><div>🧮<span>答题筹钱</span></div><div>🪵<span>三圈筑防</span></div><div>🎲<span>六面命运</span></div><div>🔦<span>照狼变狗</span></div></div>
+      <div class="intro-buttons"><button class="primary-button large" data-mode="easy">开始守夜 <span>→</span></button><button class="secondary-button" data-mode="nightmare">惊悚进阶模式</button></div>
+      <button id="continueButton" class="continue-button hidden">继续上次守夜</button>
+      <p class="smallprint">规则：每回合答1题、做最多2次工程操作，再结束回合触发狼群行动。撑过3夜即胜利。</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
+    <div class="dialog-box help-dialog"><button class="modal-close" id="closeHelp" aria-label="关闭说明">×</button><span class="eyebrow">SURVIVAL MANUAL</span><h2 id="helpTitle">守夜手册</h2><ol><li><b>答题</b>：正确获得金币、木材。连续答对4题还会得到1格手电电量。</li><li><b>采购与修筑</b>：4金币买2木材，5金币买1石材。每回合最多进行2次采购或工程行动。</li><li><b>命运骰</b>：答错题才能掷六面骰。1面灾厄（小屋−2生命并来狼），5与6面获得手电电量，其余面是小奖或落空。</li><li><b>手电筒</b>：点击任意狼选中，再点击“照射”。每次消耗1格电量，狼变吉娃娃并退回外侧一圈；在最外圈的会退入森林。吉娃娃不再攻击，稍后跑掉。</li><li><b>防线</b>：从外圈木栅到中圈石墙、内圈铁门。狼突破一圈后，下回合才能往内圈移动。</li><li><b>胜利</b>：存活18回合，守过3个夜晚。每6回合天亮，狼撤退、外婆补充少量物资。</li></ol><p class="help-note">苹果手机：通过 Safari 打开部署好的 HTTPS 网页，再在分享菜单选择“添加到主屏幕”，可作为全屏网页应用游玩。</p><button class="primary-button" id="okHelp">继续守夜</button></div>
+  </div>
+
+  <div class="overlay" id="endOverlay" role="dialog" aria-modal="true" aria-labelledby="endTitle" aria-hidden="true"><div class="dialog-box end-dialog"><span id="endIcon" class="end-icon">☀</span><span class="eyebrow" id="endEyebrow">FINAL REPORT</span><h2 id="endTitle">天亮了！</h2><p id="endReason"></p><div class="end-stats" id="endStats"></div><button class="primary-button large" data-restart="yes">再守一夜 →</button></div></div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+/* Wolf Math Defense: deterministic, framework-free rules engine. */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  if (root) root.WolfMathEngine = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  const TOTAL_TURNS = 18;
+  const PER_NIGHT = 6;
+  const RING_NAMES = ['外圈木栅', '中圈石墙', '内圈铁门'];
+  const MAX_WALLS = [11, 10, 9];
+  const DICE_FACES = [
+    { face: 1, label: '黑雾来袭', detail: '小屋失去2点生命，额外来一只狼。', kind: 'bad' },
+    { face: 2, label: '虚惊一场', detail: '狼愣住了。你什么也没拿到。', kind: 'neutral' },
+    { face: 3, label: '捡到木料', detail: '获得1块木材。', kind: 'minor' },
+    { face: 4, label: '意外退款', detail: '获得2枚金币。', kind: 'minor' },
+    { face: 5, label: '拾到手电筒', detail: '手电电量+1，可将一只狼变成吉娃娃。', kind: 'good' },
+    { face: 6, label: '超级手电筒', detail: '手电电量+2，今晚的狼要改名了。', kind: 'jackpot' }
+  ];
+
+  function rollRandom(state) {
+    let x = state.seed >>> 0;
+    x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+    state.seed = x >>> 0 || 2463534242;
+    return (state.seed >>> 0) / 4294967296;
+  }
+  function randInt(state, min, max) {
+    return Math.floor(rollRandom(state) * (max - min + 1)) + min;
+  }
+  function shuffled(state, a) {
+    const b = a.slice();
+    for (let i = b.length - 1; i > 0; i--) {
+      const j = randInt(state, 0, i);
+      [b[i], b[j]] = [b[j], b[i]];
+    }
+    return b;
+  }
+  function log(state, line, type) {
+    state.feed.unshift({ id: ++state.logId, line, type: type || 'info' });
+    state.feed = state.feed.slice(0, 7);
+  }
+  function clamp(value, lo, hi) { return Math.max(lo, Math.min(hi, value)); }
+  function nightOf(turn) { return Math.min(3, 1 + Math.floor((turn - 1) / PER_NIGHT)); }
+
+  function makeQuestion(state) {
+    const night = nightOf(state.turn);
+    const easy = state.mode === 'easy';
+    const maxTemplate = easy ? 4 : (night === 1 ? 5 : night === 2 ? 7 : 9);
+    const template = randInt(state, 0, maxTemplate);
+    let prompt, answer, hint;
+    const a = randInt(state, 2, easy ? 7 : 8 + night * 2);
+    const b = randInt(state, 2, easy ? 6 : 5 + night * 2);
+    const c = randInt(state, 1, 4);
+    if (template === 0) {
+      prompt = `外婆买了 ${a} 块木板，又买了 ${b} 块。仓库现在有几块木板？`;
+      answer = a + b; hint = `${a} + ${b} = ${answer}`;
+    } else if (template === 1) {
+      const total = a + b + c;
+      prompt = `守夜人带来 ${total} 枚金币，买钉子花了 ${b} 枚，还剩多少？`;
+      answer = total - b; hint = `${total} − ${b} = ${answer}`;
+    } else if (template === 2) {
+      prompt = `一捆木板要 ${a} 枚金币，买 ${c + 1} 捆一共需要多少？`;
+      answer = a * (c + 1); hint = `${a} × ${c + 1} = ${answer}`;
+    } else if (template === 3) {
+      const t = a * (c + 1);
+      prompt = `${t} 块木板平均分给 ${c + 1} 道防线，每道能分到几块？`;
+      answer = a; hint = `${t} ÷ ${c + 1} = ${answer}`;
+    } else if (template === 4) {
+      prompt = `修外墙要 ${a} 块木板，中墙要 ${b} 块，手头有 ${a + b - c} 块。还缺几块？`;
+      answer = c; hint = `${a} + ${b} − ${a + b - c} = ${answer}`;
+    } else if (template === 5) {
+      prompt = `商店有 ${a} 组木料，每组 ${b} 块，另外赠送 ${c} 块。共有几块？`;
+      answer = a * b + c; hint = `${a} × ${b} + ${c} = ${answer}`;
+    } else if (template === 6) {
+      const p = (a + 2) * 2;
+      prompt = `两道门每道要 ${a + 2} 枚螺丝，已经准备了 ${c} 枚。还需多少枚？`;
+      answer = p - c; hint = `2 × ${a + 2} − ${c} = ${answer}`;
+    } else if (template === 7) {
+      const full = (a + b) * 2;
+      prompt = `每组木料 ${a + b} 元，买两组可减 ${c} 元。实际要付多少？`;
+      answer = full - c; hint = `2 × ${a + b} − ${c} = ${answer}`;
+    } else if (template === 8) {
+      const unit = c + 2;
+      prompt = `一共 ${a * unit} 块石头，每道防线分 ${unit} 块，能修几道？`;
+      answer = a; hint = `${a * unit} ÷ ${unit} = ${answer}`;
+    } else {
+      const every = a + 3;
+      const spent = Math.min(b, every * 2 - 1);
+      prompt = `两天各存 ${every} 枚金币，买陷阱花 ${spent} 枚，剩下多少？`;
+      answer = every * 2 - spent; hint = `2 × ${every} − ${spent} = ${answer}`;
+    }
+    const wrong = new Set();
+    let tries = 0;
+    while (wrong.size < 2 && tries++ < 60) {
+      const d = randInt(state, 1, 5 + night * 2) * (rollRandom(state) < 0.5 ? -1 : 1);
+      const candidate = answer + d;
+      if (candidate >= 0 && candidate !== answer) wrong.add(candidate);
+    }
+    let candidate = answer + 1;
+    while (wrong.size < 2) { if (!wrong.has(candidate)) wrong.add(candidate); candidate++; }
+    return { prompt, answer, hint, options: shuffled(state, [answer, ...wrong]), id: state.turn };
+  }
+
+  function addWolf(state, fixedKind) {
+    const night = nightOf(state.turn);
+    const variant = rollRandom(state);
+    const ambush = rollRandom(state);
+    let ring = 1;
+    if (!fixedKind) {
+      if (night === 2 && ambush < (state.mode === 'nightmare' ? .36 : .23)) ring = 2;
+      if (night === 3) {
+        if (ambush < (state.mode === 'nightmare' ? .24 : .14)) ring = 3;
+        else if (ambush < (state.mode === 'nightmare' ? .66 : .48)) ring = 2;
+      }
+    }
+    const kind = fixedKind || (ring > 1 ? 'sneak' : night >= 3 && variant < .22 ? 'heavy' : night >= 2 && variant < .38 ? 'swift' : 'wolf');
+    const angle = -Math.PI * .84 + rollRandom(state) * Math.PI * 1.65;
+    const wolf = { id: ++state.nextWolfId, kind, ring, angle, attack: kind === 'heavy' ? 3 : 2, dogTurns: 0, stunned: 0 };
+    state.wolves.push(wolf);
+    if (ring > 1) log(state, `警报！钻地狼${wolf.id}绕过外圈，直接潜入第${ring}圈！`, 'bad');
+    return wolf;
+  }
+
+  function newGame(mode, seed) {
+    const chosen = mode === 'nightmare' ? 'nightmare' : 'easy';
+    const state = {
+      version: 1, mode: chosen, seed: (Number(seed) >>> 0) || (Date.now() >>> 0) || 2817,
+      turn: 1, night: 1, phase: 'question', maxTurns: TOTAL_TURNS,
+      house: chosen === 'nightmare' ? 12 : 15, maxHouse: 15, coins: 4, wood: 3, stone: 0, charges: 0,
+      walls: chosen === 'nightmare' ? [6, 5, 4] : [7, 6, 5], traps: [0, 0, 0], actions: 2, maxActions: 2,
+      selectedRing: 0, selectedWolf: null, streak: 0, correct: 0, wrong: 0,
+      score: 0, logId: 0, nextWolfId: 0, wolves: [], feed: [], lastDice: null,
+      lastResult: null, gameEndReason: ''
+    };
+    state.question = makeQuestion(state);
+    addWolf(state, 'wolf');
+    log(state, '外婆：路上还打游戏？快用数学换材料！狼只懂拆迁。', 'story');
+    return state;
+  }
+
+  function failIfNeeded(state) {
+    if (state.house <= 0) {
+      state.house = 0;
+      state.phase = 'lost';
+      state.gameEndReason = '狼群提交了房屋拆除验收报告。';
+      log(state, '小屋倒塌。外婆：明天开始补习基础数学。', 'bad');
+      return true;
+    }
+    return false;
+  }
+  function answerQuestion(state, selected) {
+    if (state.phase !== 'question') return { ok: false, message: '现在不是答题阶段。' };
+    const val = Number(selected);
+    const correct = val === state.question.answer;
+    const hint = state.question.hint;
+    if (correct) {
+      state.phase = 'defend';
+      state.correct++;
+      state.streak++;
+      const reward = 3 + nightOf(state.turn);
+      state.coins += reward;
+      state.wood += 1;
+      state.score += 100 + Math.min(5, state.streak) * 15;
+      let bonus = '';
+      if (state.streak % 4 === 0) {
+        state.charges = clamp(state.charges + 1, 0, 5);
+        bonus = ' 连对4题，外婆奖励1格手电电量！';
+      }
+      state.lastResult = { kind: 'correct', title: '答对啦！', text: `${hint}。获得${reward}金币和1木材。${bonus}` };
+      log(state, `答对：+${reward}金币，+1木材。${bonus}`, 'good');
+    } else {
+      state.phase = 'dice';
+      state.wrong++;
+      state.streak = 0;
+      state.score = Math.max(0, state.score - 30);
+      state.lastResult = { kind: 'wrong', title: '算错了，狼笑了', text: `正确答案：${state.question.answer}（${hint}）。可以跳过，也可以冒险掷命运骰。` };
+      log(state, '算错了！命运骰启动：1/6灾厄，2/6机会拿到手电。', 'bad');
+    }
+    return { ok: true, correct, result: state.lastResult };
+  }
+
+  function rollDice(state, forcedFace) {
+    if (state.phase !== 'dice') return { ok: false, message: '只能在答错题后掷骰。' };
+    let face = randInt(state, 1, 6);
+    if (typeof forcedFace === 'number' && forcedFace >= 1 && forcedFace <= 6) face = forcedFace;
+    const info = DICE_FACES[face - 1];
+    state.lastDice = face;
+    state.phase = 'defend';
+    if (face === 1) {
+      state.house = Math.max(0, state.house - 2);
+      addWolf(state);
+    } else if (face === 3) state.wood++;
+    else if (face === 4) state.coins += 2;
+    else if (face === 5) state.charges = clamp(state.charges + 1, 0, 5);
+    else if (face === 6) state.charges = clamp(state.charges + 2, 0, 5);
+    state.lastResult = { kind: info.kind, title: `骰子 ${face} · ${info.label}`, text: info.detail };
+    log(state, `骰子${face}：${info.label}。${info.detail}`, face === 1 ? 'bad' : face >= 5 ? 'good' : 'info');
+    failIfNeeded(state);
+    return { ok: true, face, info };
+  }
+
+  function skipDice(state) {
+    if (state.phase !== 'dice') return { ok: false, message: '现在不能跳过骰子。' };
+    state.phase = 'defend';
+    state.lastResult = { kind: 'neutral', title: '见好就收', text: '没有掷骰，也没有奖励。至少小屋目前还在。' };
+    log(state, '选择不掷骰子，安全进入建设阶段。', 'info');
+    return { ok: true };
+  }
+
+  function takeAction(state, key, ring) {
+    if (state.phase !== 'defend') return { ok: false, message: '请先完成本回合的算术题。' };
+    if (state.actions <= 0) return { ok: false, message: '每回合只有2次工程行动。' };
+    const r = Number.isInteger(ring) && ring >= 0 && ring <= 2 ? ring : state.selectedRing;
+    if (key === 'buyWood') {
+      if (state.coins < 4) return { ok: false, message: '金币不足：购买2木材需要4金币。' };
+      state.coins -= 4; state.wood += 2;
+      log(state, '采购木料：-4金币，+2木材。', 'info');
+    } else if (key === 'buyStone') {
+      if (state.coins < 5) return { ok: false, message: '金币不足：购买1石材需要5金币。' };
+      state.coins -= 5; state.stone += 1;
+      log(state, '采购石材：-5金币，+1石材。', 'info');
+    } else if (key === 'fortify') {
+      if (state.wood < 2) return { ok: false, message: '加固防线需要2木材。' };
+      if (state.walls[r] >= MAX_WALLS[r]) return { ok: false, message: `${RING_NAMES[r]}已经加固到上限。` };
+      state.wood -= 2;
+      const gained = Math.min(4, MAX_WALLS[r] - state.walls[r]);
+      state.walls[r] += gained;
+      state.score += 10;
+      log(state, `加固${RING_NAMES[r]}：+${gained}耐久。`, 'good');
+    } else if (key === 'repair') {
+      if (state.wood < 3) return { ok: false, message: '修理小屋需要3木材。' };
+      if (state.house >= state.maxHouse) return { ok: false, message: '小屋目前完好。' };
+      state.wood -= 3;
+      const gained = Math.min(4, state.maxHouse - state.house);
+      state.house += gained;
+      log(state, `修理小屋：+${gained}生命。`, 'good');
+    } else if (key === 'trap') {
+      if (state.wood < 1 || state.stone < 1) return { ok: false, message: '布置陷阱需要1木材+1石材。' };
+      if (state.traps[r] >= 2) return { ok: false, message: '这一圈最多可放2个陷阱。' };
+      state.wood -= 1; state.stone -= 1; state.traps[r]++;
+      log(state, `${RING_NAMES[r]}布置了陷阱。狼踩中会后退一层。`, 'good');
+    } else return { ok: false, message: '未知工程行动。' };
+    state.actions--;
+    return { ok: true };
+  }
+
+  function flashWolf(state, wolfId) {
+    if (state.phase !== 'defend') return { ok: false, message: '请先完成答题或骰子阶段。' };
+    if (!state.charges) return { ok: false, message: '手电没有电量。答错题后可赌骰子，连对4题也能获得电量。' };
+    const wolf = state.wolves.find(w => w.id === Number(wolfId));
+    if (!wolf) return { ok: false, message: '目标已经不在附近。' };
+    if (wolf.kind === 'dog') return { ok: false, message: '它已经是吉娃娃了，再照会让它自信。' };
+    state.charges--;
+    const from = wolf.ring;
+    wolf.kind = 'dog';
+    wolf.ring = Math.max(0, from - 1);
+    wolf.attack = 0;
+    wolf.dogTurns = 2;
+    wolf.stunned = 0;
+    state.selectedWolf = null;
+    state.score += 70;
+    const place = from === 1 ? '森林边缘' : RING_NAMES[from - 2];
+    log(state, `手电光！狼${wolf.id}→吉娃娃，自动退到${place}。`, 'good');
+    state.lastResult = { kind: 'jackpot', title: '嗷呜？汪！', text: `狼${wolf.id}变成吉娃娃，自动后退一整层（${place}），不再攻击。` };
+    return { ok: true, wolfId: wolf.id, from, to: wolf.ring };
+  }
+
+  function endTurn(state) {
+    if (state.phase !== 'defend') return { ok: false, message: '目前不能结束回合。' };
+    const event = { attacked: [], retreats: [], damageHouse: 0, spawned: [], dawn: false, ended: false };
+    const survivors = [];
+    for (const wolf of state.wolves) {
+      if (wolf.kind === 'dog') {
+        wolf.dogTurns--;
+        if (wolf.dogTurns <= 0) {
+          log(state, `吉娃娃${wolf.id}带着尊严逃回森林。`, 'good');
+          event.retreats.push(wolf.id);
+        } else survivors.push(wolf);
+        continue;
+      }
+      if (wolf.ring <= 0) {
+        event.retreats.push(wolf.id);
+        log(state, `狼${wolf.id}被陷阱赶进森林，灰溜溜地离开了。`, 'good');
+        continue;
+      }
+      if (wolf.stunned > 0) { wolf.stunned--; survivors.push(wolf); continue; }
+      const wallIndex = wolf.ring - 1;
+      if (state.traps[wallIndex] > 0) {
+        state.traps[wallIndex]--;
+        wolf.ring = Math.max(0, wolf.ring - 1);
+        wolf.stunned = 1;
+        event.retreats.push(wolf.id);
+        log(state, `狼${wolf.id}踩中陷阱，被弹回外围一层！`, 'good');
+      } else if (state.walls[wallIndex] > 0) {
+        const actual = Math.min(wolf.attack, state.walls[wallIndex]);
+        state.walls[wallIndex] = Math.max(0, state.walls[wallIndex] - wolf.attack);
+        event.attacked.push({ wolfId: wolf.id, ring: wallIndex, damage: actual });
+        if (state.walls[wallIndex] === 0) {
+          log(state, `第${wallIndex + 1}层防线被狼${wolf.id}拆穿！`, 'bad');
+        }
+      } else if (wolf.ring < 3) {
+        wolf.ring++;
+        log(state, `狼${wolf.id}穿过破口，进入${RING_NAMES[wolf.ring - 1]}。`, 'bad');
+      } else {
+        const damage = wolf.attack;
+        state.house = Math.max(0, state.house - damage);
+        event.damageHouse += damage;
+        wolf.stunned = 1;
+        log(state, `狼${wolf.id}撞击小屋！生命-${damage}。`, 'bad');
+      }
+      survivors.push(wolf);
+    }
+    state.wolves = survivors;
+    if (state.wolves.some(w => w.kind !== 'dog') && rollRandom(state) < (state.mode === 'nightmare' ? .16 : .08)) {
+      state.house = Math.max(0, state.house - 1);
+      event.damageHouse++;
+      log(state, '一只狼绕到厨房窗边捣乱。小屋生命-1。', 'bad');
+    }
+    if (failIfNeeded(state)) { event.ended = true; return { ok: true, event }; }
+
+    const completedTurn = state.turn;
+    if (completedTurn === TOTAL_TURNS) {
+      state.phase = 'won';
+      state.gameEndReason = '三夜守住！狼群改行卖儿童算术教材。';
+      state.score += state.house * 35 + state.walls.reduce((a, b) => a + b, 0) * 6;
+      log(state, `天亮了！通关得分 ${state.score}。`, 'good');
+      event.ended = true;
+      return { ok: true, event };
+    }
+
+    if (completedTurn % PER_NIGHT === 0) {
+      event.dawn = true;
+      state.wolves = [];
+      state.wood += 2; state.stone += 1;
+      state.walls = state.walls.map((hp, i) => Math.min(MAX_WALLS[i], hp + 2));
+      state.house = Math.min(state.maxHouse, state.house + 2);
+      log(state, '黎明换班！狼群退回树林。补给+2木材/+1石材，小屋+2生命，三圈各+2耐久。', 'good');
+    } else {
+      const currentNight = nightOf(completedTurn);
+      const maxWolves = currentNight === 1 ? 5 : currentNight === 2 ? 7 : 8;
+      let incoming = currentNight === 1 ? (rollRandom(state) < .82 ? 1 : 0) : 1;
+      if (currentNight > 1 && rollRandom(state) < (currentNight === 2 ? .28 : .42)) incoming++;
+      for (let n = 0; n < incoming && state.wolves.filter(w => w.kind !== 'dog').length < maxWolves; n++) {
+        const w = addWolf(state);
+        event.spawned.push(w.id);
+      }
+      if (event.spawned.length) log(state, `树林里亮起${event.spawned.length}双新眼睛。`, 'info');
+    }
+    state.turn++;
+    state.night = nightOf(state.turn);
+    if (completedTurn === 12 && state.mode === 'nightmare') {
+      const boss = addWolf(state, 'heavy');
+      boss.ring = 2;
+      boss.attack = 4;
+      log(state, '第三夜，狼王提前钻进中圈！外婆：它恐怕学过微积分。', 'bad');
+    }
+    state.actions = state.maxActions;
+    state.phase = 'question';
+    state.question = makeQuestion(state);
+    state.lastDice = null;
+    state.lastResult = null;
+    state.selectedWolf = null;
+    return { ok: true, event };
+  }
+
+  function scoreLabel(score) {
+    return score >= 2500 ? '数学守夜大师' : score >= 1700 ? '金牌栅栏工程师' : score >= 900 ? '外婆的合格帮手' : '吉娃娃见习饲养员';
+  }
+  function getWolfName(wolf) {
+    if (wolf.kind === 'dog') return '吉娃娃';
+    if (wolf.kind === 'heavy') return '大块头狼';
+    if (wolf.kind === 'swift') return '快脚狼';
+    if (wolf.kind === 'sneak') return '钻地狼';
+    return '野狼';
+  }
+
+  return {
+    TOTAL_TURNS, PER_NIGHT, RING_NAMES, MAX_WALLS, DICE_FACES,
+    newGame, makeQuestion, answerQuestion, rollDice, skipDice, takeAction, flashWolf, endTurn,
+    scoreLabel, getWolfName, nightOf
+  };
+});
+
+</script>
+  <script>
+/* Wolf Math Defense: responsive UI and hand-drawn 2D canvas renderer. */
+(function () {
+  'use strict';
+  const G = window.WolfMathEngine;
+  const $ = id => document.getElementById(id);
+  const canvas = $('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1000, H = 600;
+  const HOME_X = 506, HOME_Y = 334;
+  const RING_RADII = [[388, 240], [286, 179], [185, 116]];
+  const storageKey = 'wolf-math-defense-save-v1';
+  let state = G.newGame('easy');
+  let stored = loadSave();
+  let soundOn = true;
+  let audioCtx = null;
+  let toastTimer = null;
+  let fx = null;
+  const moveFx = new Map();
+  let drawing = true;
+  let rolling = false;
+  let lastView = '';
+  let screenshotFrame = 0;
+
+  const stars = Array.from({ length: 65 }, (_, i) => ({
+    x: ((i * 378.17 + 71) % 930) + 30,
+    y: ((i * 133.47 + 39) % 230) + 8,
+    r: (i % 7 === 0 ? 1.8 : .65), offset: i * 3.25
+  }));
+  const trees = Array.from({ length: 31 }, (_, i) => ({ x: i * 37 - 29, y: 245 + (i % 4) * 16, h: 51 + (i % 7) * 17 }));
+
+  function loadSave() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) || 'null');
+      if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.walls) || !Array.isArray(parsed.wolves) || !parsed.question) return null;
+      return parsed;
+    } catch (_) { return null; }
+  }
+  function persist() { try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {} }
+  function resetSave() { try { localStorage.removeItem(storageKey); } catch (_) {} }
+  function escapeText(str) {
+    return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+  function toast(message) {
+    $('toast').textContent = message;
+    $('toast').classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $('toast').classList.remove('visible'), 2900);
+  }
+  function playSound(kind) {
+    if (!soundOn) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      const now = audioCtx.currentTime;
+      const notes = kind === 'correct' ? [510, 650, 810] : kind === 'wrong' ? [340, 285, 220] : kind === 'wolf' ? [160, 145] : kind === 'flash' ? [390, 790, 1030] : kind === 'win' ? [392, 493, 587, 784] : [330];
+      notes.forEach((note, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = kind === 'wolf' ? 'sawtooth' : 'sine';
+        osc.frequency.setValueAtTime(note, now + index * .075);
+        gain.gain.setValueAtTime(.0001, now + index * .075);
+        gain.gain.exponentialRampToValueAtTime(kind === 'wolf' ? .045 : .075, now + index * .075 + .017);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + index * .075 + .16);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now + index * .075); osc.stop(now + index * .075 + .18);
+      });
+    } catch (_) {}
+  }
+  function vibrate(duration) { try { navigator.vibrate?.(duration); } catch (_) {} }
+  function impact(text) {
+    $('impactLayer').innerHTML = `<div class="impact-word">${escapeText(text)}</div>`;
+    setTimeout(() => { $('impactLayer').innerHTML = ''; }, 1050);
+  }
+  function start(mode) {
+    state = G.newGame(mode, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0);
+    stored = null;
+    $('introOverlay').classList.remove('visible');
+    $('endOverlay').classList.remove('visible');
+    render(); persist();
+    playSound('correct');
+  }
+  function continueGame() {
+    if (!stored) return;
+    state = stored;
+    stored = null;
+    $('introOverlay').classList.remove('visible');
+    render();
+    if (state.phase === 'won' || state.phase === 'lost') displayEnding();
+  }
+  function confirmRestart() {
+    if (!window.confirm('重新开始本局游戏？当前守夜进度会清空。')) return;
+    resetSave();
+    stored = null;
+    $('introOverlay').classList.add('visible');
+    $('endOverlay').classList.remove('visible');
+    $('introOverlay').setAttribute('aria-hidden', 'false');
+  }
+  function interact(action, param) {
+    if (rolling) return;
+    let result;
+    if (action === 'answer') {
+      result = G.answerQuestion(state, Number(param));
+      if (result.ok) {
+        playSound(result.correct ? 'correct' : 'wrong');
+        impact(result.correct ? '答对！' : '答错！');
+        if (!result.correct) vibrate([35, 45, 65]);
+      }
+    } else if (action === 'roll') {
+      startRoulette(); return;
+    } else if (action === 'skip') result = G.skipDice(state);
+    else if (action === 'endturn') {
+      result = G.endTurn(state);
+      if (result.ok) {
+        playSound(result.event.damageHouse ? 'wolf' : result.event.dawn ? 'correct' : 'tick');
+        if (result.event.damageHouse) { impact(`小屋 -${result.event.damageHouse} ♥`); vibrate(90); }
+        else if (result.event.dawn) impact('黎明补给 +');
+      }
+    } else if (action === 'flash') {
+      const selected = Number(param) || state.selectedWolf; // Direct wolf-card flashlight always wins over stale selection.
+      const wolf = state.wolves.find(w => w.id === selected);
+      if (wolf) fx = { angle: wolf.angle, ring: wolf.ring, at: performance.now() };
+      result = G.flashWolf(state, selected);
+      if (result.ok) {
+        moveFx.set(result.wolfId, { from: result.from, to: result.to, at: performance.now() });
+        playSound('flash'); vibrate([25, 30, 25]); impact('嗷呜 → 汪！');
+      } else fx = null;
+    } else {
+      result = G.takeAction(state, action, state.selectedRing);
+      if (result.ok) playSound('tick');
+    }
+    if (!result?.ok) toast(result?.message || '操作暂时不可用。');
+    if (result?.ok) {
+      if (state.lastResult && (action === 'answer' || action === 'flash')) toast(`${state.lastResult.title} ${state.lastResult.text}`);
+      persist(); render();
+      if (state.phase === 'won' || state.phase === 'lost') setTimeout(displayEnding, 700);
+    }
+  }
+  function startRoulette() {
+    if (rolling || state.phase !== 'dice') return;
+    rolling = true;
+    const overlay = document.createElement('div');
+    overlay.className = 'roulette-backdrop';
+    overlay.innerHTML = `<div class="roulette-dialog"><div class="roulette-title">🎲 命运六面骰</div><div style="position:relative;width:210px;margin:auto"><div class="roulette-pointer">▼</div><div class="roulette-wheel" id="rollingWheel">${Array.from({ length: 6 }, (_, i) => {
+      const a = (i + .5) * Math.PI / 3; // The label aligns with its matching conic-gradient sector.
+      const x = 104 + 71 * Math.sin(a), y = 105 - 71 * Math.cos(a);
+      return `<span class="roulette-num" style="left:${x}px;top:${y}px">${i + 1}</span>`;
+    }).join('')}</div></div><div class="roulette-status">狼盯着骰子，外婆盯着你……</div><div class="roulette-result" id="rouletteResult"></div></div>`;
+    document.body.appendChild(overlay);
+    const result = G.rollDice(state);
+    const face = result.face;
+    persist(); // Save the committed result immediately, even if Android is paused mid-animation.
+    // Every sector is 60 degrees; face 1 begins at 0-60 degrees.
+    const stop = (360 - ((face - 1) * 60 + 30)) % 360;
+    setTimeout(() => { const wheel = $('rollingWheel'); if (wheel) wheel.style.transform = `rotate(${2160 + stop}deg)`; playSound('tick'); }, 50);
+    setTimeout(() => {
+      const ele = $('rouletteResult');
+      if (ele) ele.textContent = `${face} · ${result.info.label}`;
+      playSound(face === 1 ? 'wrong' : face >= 5 ? 'flash' : 'tick');
+      if (face === 1) vibrate([120, 70, 140]);
+    }, 1940);
+    setTimeout(() => {
+      overlay.remove(); rolling = false;
+      persist(); render();
+      toast(result.info.detail);
+      if (face >= 5) impact('手电电量 +' + (face === 6 ? 2 : 1));
+      if (state.phase === 'lost') displayEnding();
+    }, 2550);
+  }
+  function render() {
+    const night = G.nightOf(state.turn);
+    $('nightLabel').textContent = `第 ${night} 夜`;
+    $('turnLabel').textContent = `回合 ${state.turn} / ${G.TOTAL_TURNS}`;
+    const phaseText = { question: '答题中', dice: '命运骰', defend: '修筑防线', won: '胜利！', lost: '失守！' };
+    $('phaseLabel').textContent = phaseText[state.phase] || state.phase;
+    $('phaseDot').style.background = state.phase === 'dice' ? '#ffba67' : state.phase === 'lost' ? '#f47c80' : '#9be4af';
+    $('scoreLabel').textContent = state.score;
+    $('healthText').textContent = `${state.house} / ${state.maxHouse}`;
+    $('healthFill').style.width = `${100 * state.house / state.maxHouse}%`;
+    $('flashBadge').innerHTML = `🔦 <span>${state.charges} 格电量</span>`;
+    $('wolfCount').textContent = `🐺 ${state.wolves.filter(w => w.kind !== 'dog').length} 狼 · 🐕 ${state.wolves.filter(w => w.kind === 'dog').length} 狗`;
+    $('coinsNum').textContent = state.coins;
+    $('woodNum').textContent = state.wood;
+    $('stoneNum').textContent = state.stone;
+    $('batteryNum').textContent = state.charges;
+    $('missionText').textContent = state.phase === 'question' ? '算对数学题领物资；狼群正在等待你交卷。' : state.phase === 'dice' ? '数学挑战失败：掷骰赌一个手电筒，还是不冒险？' : state.phase === 'defend' ? '加固选中的防线，或者用手电筒把狼变成吉娃娃。' : '这一夜的结果已经揭晓。';
+    renderRings(); renderPhase(); renderWolves(); renderFeed();
+    if (!drawing) draw(performance.now());
+    lastView = state.phase;
+  }
+  function renderRings() {
+    $('defenseRings').innerHTML = G.RING_NAMES.map((label, i) => {
+      const health = state.walls[i], max = G.MAX_WALLS[i];
+      return `<button type="button" class="ring-button ${state.selectedRing === i ? 'selected' : ''}" data-ring="${i}" aria-pressed="${state.selectedRing === i}"><div class="ring-header"><span class="ring-name"><span class="ring-symbol">${['Ⅰ', 'Ⅱ', 'Ⅲ'][i]}</span>${label}</span></div><div class="ring-meter"><div class="${health / max < .35 ? 'critical' : ''}" style="width:${100 * health / max}%"></div></div><div class="ring-footer"><span>${health === 0 ? '已被突破' : '耐久'}</span><span class="ring-health">${health}/${max}</span></div><div class="ring-footer"><span>陷阱</span><span>${state.traps[i]} / 2</span></div></button>`;
+    }).join('');
+  }
+  function renderResult() {
+    if (!state.lastResult) return '';
+    const r = state.lastResult;
+    const cls = ['wrong', 'bad'].includes(r.kind) ? 'bad' : r.kind === 'neutral' ? 'neutral' : '';
+    return `<div class="result-strip ${cls}"><span class="result-emoji">${cls === 'bad' ? '⚠' : '✦'}</span><div><strong>${escapeText(r.title)}</strong>${escapeText(r.text)}</div></div>`;
+  }
+  function renderPhase() {
+    const panel = $('phasePanel');
+    if (state.phase === 'question') {
+      panel.innerHTML = `<div class="action-card"><div class="action-card-header"><span class="micro-tag">🧮 数学采购挑战</span><span class="chapter-tag">第 ${state.turn} 题 / 18</span></div><div class="question-inner"><div class="question-title">${escapeText(state.question.prompt)}</div><p class="answer-label">选出正确答案以获得建材</p><div class="answer-choices">${state.question.options.map((v, i) => `<button class="answer-option" type="button" data-answer="${v}" aria-label="选项${i + 1}，${v}">${v}</button>`).join('')}</div><p class="action-hint">✓ 答对：金币 +${3 + G.nightOf(state.turn)}、木材 +1；连续4题答对还能获得手电电量。</p></div></div>`;
+    } else if (state.phase === 'dice') {
+      panel.innerHTML = `${renderResult()}<div class="action-card"><div class="dice-layout"><span class="micro-tag">🎲 算错了的补救机会</span><h3 style="margin-top:12px">敢不敢掷命运骰？</h3><p class="dice-description">六个面，等概率。坏运气会让狼群袭来；好手气拿到手电筒，照狼一眼，狼就成吉娃娃。</p><div class="dice-outcomes">${G.DICE_FACES.map(f => `<span class="dice-face ${f.kind}"><span>${f.face}</span> ${f.label}</span>`).join('')}</div><div class="dice-actions"><button type="button" class="primary-button" data-action="roll">🎲 掷命运骰</button><button type="button" class="secondary-button" data-action="skip">安全跳过</button></div><p class="action-hint">概率公开：灾厄 1/6，拿手电 2/6，其余 3/6。没有真金钱赌博。</p></div></div>`;
+    } else if (state.phase === 'defend') {
+      const can = (test) => state.actions > 0 && test;
+      panel.innerHTML = `${renderResult()}<div class="action-card"><div class="defend-header"><div class="defend-title">🛠 修筑与采购</div><span class="remaining-actions">剩余行动 ${state.actions} / 2</span></div><div class="defend-body"><p class="action-hint">当前目标：<b style="color:#ffe0a3">${G.RING_NAMES[state.selectedRing]}</b>。点击地图或下方防线可切换。</p><div class="build-choice"><button class="build-button" type="button" data-action="buyWood" ${can(state.coins >= 4) ? '' : 'disabled'}><b><span class="build-symbol">🪵</span>买两块木材</b><small>补充建材库存</small><span class="cost">−4 金币 → +2 木材</span></button><button class="build-button" type="button" data-action="buyStone" ${can(state.coins >= 5) ? '' : 'disabled'}><b><span class="build-symbol">⬡</span>买一块石材</b><small>用于布置绊狼陷阱</small><span class="cost">−5 金币 → +1 石材</span></button><button class="build-button" type="button" data-action="fortify" ${can(state.wood >= 2 && state.walls[state.selectedRing] < G.MAX_WALLS[state.selectedRing]) ? '' : 'disabled'}><b><span class="build-symbol">🏗</span>加固选中防线</b><small>防线耐久最多 +4</small><span class="cost">−2 木材</span></button><button class="build-button" type="button" data-action="repair" ${can(state.wood >= 3 && state.house < state.maxHouse) ? '' : 'disabled'}><b><span class="build-symbol">♥</span>修理外婆小屋</b><small>小屋生命最多 +4</small><span class="cost">−3 木材</span></button><button class="build-button" type="button" data-action="trap" ${can(state.wood >= 1 && state.stone >= 1 && state.traps[state.selectedRing] < 2) ? '' : 'disabled'}><b><span class="build-symbol">⚙</span>绊狼陷阱</b><small>踩中退后一圈</small><span class="cost">−1 木材 · −1 石材</span></button><button class="build-button" type="button" data-action="flash" ${state.charges && state.selectedWolf && state.wolves.some(w => w.id === state.selectedWolf && w.kind !== 'dog') ? '' : 'disabled'}><b><span class="build-symbol">🔦</span>照射选中的狼</b><small>${state.selectedWolf ? `当前选中 #${state.selectedWolf}` : '先点地图里的狼'}</small><span class="cost">−1 手电电量 · 免费行动</span></button></div><button type="button" class="endturn-button" data-action="endturn">🌙 结束回合 · 狼群开始行动 →</button><p class="attack-warning">⚠ 结束回合后，狼会攻击脚下那层防线。耐久耗尽后将继续向小屋前进。</p></div></div>`;
+    } else {
+      panel.innerHTML = `<div class="action-card"><div class="dice-layout"><h3>${state.phase === 'won' ? '守夜成功！' : '防线失守！'}</h3><p class="dice-description">${escapeText(state.gameEndReason)}</p><button class="primary-button" type="button" data-restart="yes">重新开始</button></div></div>`;
+    }
+  }
+  function renderWolves() {
+    const list = $('wolfList');
+    if (!state.wolves.length) {
+      list.innerHTML = '<div class="empty-wolves">树林里暂时没有狼。最好趁这个机会修补外墙。</div>';
+      return;
+    }
+    list.innerHTML = state.wolves.map(w => {
+      const dog = w.kind === 'dog';
+      const label = G.getWolfName(w);
+      const position = w.ring === 0 ? '森林边缘' : G.RING_NAMES[w.ring - 1];
+      const ready = state.phase === 'defend' && state.charges > 0 && !dog;
+      return `<div class="wolf-card ${state.selectedWolf === w.id ? 'selected' : ''}"><div class="wolf-avatar ${dog ? 'dog' : ''}">${dog ? '🐕' : w.kind === 'heavy' ? '🐺' : '🐺'}</div><div class="wolf-details"><strong>#${w.id} ${label}</strong><small>${position} ${dog ? '· 正在逃跑' : `· 攻击 ${w.attack}`}</small></div>${dog ? '<span style="color:#a7e8bc;font-size:11px">无害 ✓</span>' : `<button class="target-choose ${ready ? 'torch-target' : ''}" type="button" data-wolf="${w.id}" aria-label="选中第${w.id}只狼">${state.selectedWolf === w.id ? '已选中' : '选中'}</button>`}${ready ? `<button class="target-choose torch-target" type="button" data-directflash="${w.id}" aria-label="用手电照射第${w.id}只狼">🔦 照射</button>` : ''}</div>`;
+    }).join('');
+  }
+  function renderFeed() {
+    $('battleFeed').innerHTML = state.feed.map(item => `<li><span class="feed-dot ${item.type}"></span><span>${escapeText(item.line)}</span></li>`).join('');
+  }
+  function displayEnding() {
+    if (state.phase !== 'won' && state.phase !== 'lost') return;
+    const won = state.phase === 'won';
+    $('endIcon').textContent = won ? '☀️' : '🏚️';
+    $('endEyebrow').textContent = won ? 'MISSION COMPLETED' : 'MISSION FAILED';
+    $('endTitle').textContent = won ? '三夜守住了！' : '小屋失守了……';
+    $('endReason').textContent = won ? `${state.gameEndReason} 荣誉称号：${G.scoreLabel(state.score)}` : `${state.gameEndReason} 狼拿走了答案本，外婆拿走了游戏机。`;
+    $('endStats').innerHTML = `<div><strong>${state.score}</strong><small>守夜得分</small></div><div><strong>${state.turn} / 18</strong><small>坚持回合</small></div><div><strong>${state.correct}</strong><small>答对题数</small></div><div><strong>${state.house} ♥</strong><small>小屋生命</small></div>`;
+    $('endOverlay').classList.add('visible');
+    $('endOverlay').setAttribute('aria-hidden', 'false');
+    playSound(won ? 'win' : 'wrong');
+  }
+  function closeHelp() { $('helpOverlay').classList.remove('visible'); $('helpOverlay').setAttribute('aria-hidden', 'true'); }
+  document.addEventListener('click', event => {
+    const target = event.target;
+    if (target.closest('[data-mode]')) { start(target.closest('[data-mode]').dataset.mode); return; }
+    if (target.closest('[data-restart]')) { $('endOverlay').classList.remove('visible'); start('easy'); return; }
+    if (target.closest('[data-answer]')) { interact('answer', target.closest('[data-answer]').dataset.answer); return; }
+    if (target.closest('[data-directflash]')) { interact('flash', target.closest('[data-directflash]').dataset.directflash); return; }
+    if (target.closest('[data-wolf]')) {
+      state.selectedWolf = Number(target.closest('[data-wolf]').dataset.wolf);
+      playSound('tick'); persist(); render(); return;
+    }
+    if (target.closest('[data-ring]')) {
+      state.selectedRing = Number(target.closest('[data-ring]').dataset.ring);
+      playSound('tick'); persist(); render(); return;
+    }
+    if (target.closest('[data-action]')) { interact(target.closest('[data-action]').dataset.action); return; }
+  });
+  $('continueButton').addEventListener('click', continueGame);
+  $('restartBtn').addEventListener('click', confirmRestart);
+  $('helpBtn').addEventListener('click', () => { $('helpOverlay').classList.add('visible'); $('helpOverlay').setAttribute('aria-hidden', 'false'); });
+  $('closeHelp').addEventListener('click', closeHelp);
+  $('okHelp').addEventListener('click', closeHelp);
+  $('soundBtn').addEventListener('click', () => { soundOn = !soundOn; $('soundBtn').textContent = soundOn ? '♫' : '×'; $('soundBtn').classList.toggle('off', !soundOn); toast(soundOn ? '音效已开启' : '音效已关闭'); });
+  window.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeHelp();
+    if (/^[1-3]$/.test(event.key) && state.phase === 'question' && !$('introOverlay').classList.contains('visible') && !$('helpOverlay').classList.contains('visible')) {
+      interact('answer', state.question.options[Number(event.key) - 1]);
+    }
+  });
+  canvas.addEventListener('pointerdown', event => {
+    if ($('introOverlay').classList.contains('visible') || $('helpOverlay').classList.contains('visible') || rolling) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * W / rect.width;
+    const y = (event.clientY - rect.top) * H / rect.height;
+    let nearest = null, nearestDist = Infinity;
+    for (const wolf of state.wolves) {
+      const p = wolfPosition(wolf, performance.now());
+      const dist = Math.hypot(p.x - x, p.y - y);
+      if (dist < 49 && dist < nearestDist) { nearest = wolf; nearestDist = dist; }
+    }
+    if (nearest) {
+      if (nearest.kind === 'dog') { toast('这只吉娃娃已经投降，正在撤退。'); return; }
+      state.selectedWolf = nearest.id;
+      playSound('tick'); render(); persist();
+      if (state.phase === 'defend' && state.charges > 0) toast(`已锁定狼 #${nearest.id}，点下方「🔦 照射」或狼群雷达里的按钮。`);
+      else toast(`已选中狼 #${nearest.id}。手电筒充好电就可以照射。`);
+      return;
+    }
+    const dx = x - HOME_X, dy = y - HOME_Y;
+    const distances = RING_RADII.map(([rx, ry]) => Math.abs(Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)) - 1));
+    const min = Math.min(...distances);
+    if (min < .22) {
+      state.selectedRing = distances.indexOf(min);
+      playSound('tick'); render(); persist();
+      toast(`当前加固目标：${G.RING_NAMES[state.selectedRing]}`);
+    }
+  });
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(2.25, window.devicePixelRatio || 1);
+    const desiredW = Math.round(rect.width * dpr), desiredH = Math.round(rect.height * dpr);
+    if (canvas.width !== desiredW || canvas.height !== desiredH) { canvas.width = desiredW; canvas.height = desiredH; }
+    ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+  }
+  function rounded(x, y, w, h, r, fill, stroke, line) {
+    const radius = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + w - radius, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+    ctx.lineTo(x + w, y + h - radius);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+    ctx.lineTo(x + radius, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.lineWidth = line || 1; ctx.strokeStyle = stroke; ctx.stroke(); }
+  }
+  function ellipse(x, y, rx, ry, fill, stroke, line) {
+    ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = line || 1; ctx.stroke(); }
+  }
+  function polygon(pts, fill, stroke, line) {
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = line || 1; ctx.stroke(); }
+  }
+  function label(text, x, y, color, align, size) {
+    ctx.font = `800 ${size || 12}px system-ui, sans-serif`;
+    ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = color; ctx.fillText(text, x, y);
+  }
+  function background(t) {
+    const sky = ctx.createLinearGradient(0, 0, 0, 600);
+    sky.addColorStop(0, '#0a142b'); sky.addColorStop(.45, '#172c42'); sky.addColorStop(1, '#29413c');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    for (const s of stars) {
+      const alpha = .28 + .35 * Math.sin(t / 1600 + s.offset) ** 2;
+      ctx.fillStyle = `rgba(224,233,249,${alpha})`; ellipse(s.x, s.y, s.r, s.r, ctx.fillStyle);
+    }
+    ctx.save();
+    ctx.shadowColor = '#f7dba0'; ctx.shadowBlur = 39;
+    ellipse(811, 84, 36, 36, '#f5daa3');
+    ctx.shadowBlur = 0;
+    ellipse(801, 77, 8, 7, '#e5c58f'); ellipse(827, 92, 5, 4, '#e6c795');
+    ctx.restore();
+    ctx.globalAlpha = .13;
+    ellipse(680 + Math.sin(t / 8000) * 19, 133, 175, 30, '#d2d9dc');
+    ellipse(264 + Math.sin(t / 6500) * 21, 174, 155, 25, '#b0cbd7');
+    ctx.globalAlpha = 1;
+    polygon([[0,265],[75,203],[147,243],[225,178],[311,254],[420,198],[500,255],[587,189],[695,259],[763,201],[846,258],[935,199],[1000,252],[1000,600],[0,600]], '#172e3b');
+    polygon([[0,302],[73,251],[126,283],[228,233],[318,281],[430,246],[521,285],[618,237],[721,287],[818,248],[919,289],[1000,250],[1000,600],[0,600]], '#1b343e');
+    trees.forEach((tree, i) => {
+      const dx = tree.x, cy = tree.y;
+      polygon([[dx-16,cy],[dx,cy-tree.h],[dx+16,cy]], i % 5 === 0 ? '#102333' : '#142936');
+      polygon([[dx-18,cy+15],[dx,cy-tree.h*.72],[dx+18,cy+15]], i % 3 === 0 ? '#10252f' : '#152d35');
+      rounded(dx-3,cy+3,6,19,1,'#192634');
+    });
+    ellipse(506, 384, 500, 250, '#223e3f');
+    ellipse(506, 396, 455, 221, '#263e39');
+    for (let i = 0; i < 20; i++) {
+      const px = 55 + (i * 61.37) % 900, py = 360 + (i * 53.2) % 200;
+      ellipse(px, py, i % 3 === 0 ? 8 : 4, i % 3 === 0 ? 3 : 2, '#405947');
+    }
+    ctx.save();
+    ctx.globalAlpha = .065 + .02 * Math.sin(t / 1800);
+    ellipse(505, 377, 413, 213, '#f3e7c4');
+    ctx.restore();
+  }
+  function drawRing(i, t) {
+    const [rx, ry] = RING_RADII[i];
+    const hp = state.walls[i], max = G.MAX_WALLS[i];
+    const selected = state.selectedRing === i;
+    const ringColor = hp === 0 ? '#a25a60' : hp / max < .33 ? '#d68a6f' : i === 0 ? '#b28c65' : i === 1 ? '#94aeb9' : '#c0a36c';
+    ctx.save();
+    ctx.globalAlpha = selected ? .3 : .12;
+    ctx.lineWidth = selected ? 29 : 19;
+    ctx.strokeStyle = selected ? '#f7ca70' : ringColor;
+    ctx.beginPath(); ctx.ellipse(HOME_X, HOME_Y, rx, ry, 0, 0, 2 * Math.PI); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.setLineDash(hp === 0 ? [3, 22] : i === 0 ? [11, 5] : i === 1 ? [19, 8] : [29, 7]);
+    ctx.lineWidth = i === 2 ? 13 : 11;
+    ctx.lineCap = i === 0 ? 'round' : 'butt';
+    ctx.strokeStyle = '#142731';
+    ctx.beginPath(); ctx.ellipse(HOME_X, HOME_Y + 4, rx, ry, 0, 0, 2 * Math.PI); ctx.stroke();
+    ctx.strokeStyle = ringColor;
+    ctx.beginPath(); ctx.ellipse(HOME_X, HOME_Y, rx, ry, 0, 0, 2 * Math.PI); ctx.stroke();
+    ctx.setLineDash([]);
+    const count = [39, 32, 26][i];
+    for (let j = 0; j < count; j++) {
+      const angle = j * 2 * Math.PI / count;
+      const x = HOME_X + rx * Math.cos(angle), y = HOME_Y + ry * Math.sin(angle);
+      if (hp === 0 && j % 2) continue;
+      ctx.save(); ctx.translate(x,y); ctx.rotate(angle);
+      rounded(-5,-12,i === 2 ? 11 : 9, 24, 2, hp === 0 ? '#765650' : i === 1 ? '#667f8d' : i === 2 ? '#857c65' : '#765e48', '#1e3038',1);
+      if(i === 0) polygon([[-5,-12],[0,-20],[4,-12]], '#9b7858');
+      ctx.restore();
+    }
+    if (selected) {
+      const x = HOME_X + rx * Math.cos(-Math.PI * .58), y = HOME_Y + ry * Math.sin(-Math.PI * .58);
+      ctx.save(); ctx.shadowColor = '#ffd78d'; ctx.shadowBlur = 15;
+      ellipse(x,y,11,11,'#f5cc7c'); ctx.restore();
+    }
+    ctx.restore();
+  }
+  function drawCabin(t) {
+    // Warm firelight and ground shadow.
+    ctx.save();
+    ctx.globalAlpha = .24 + Math.sin(t / 150) * .018;
+    const pool = ctx.createRadialGradient(HOME_X, HOME_Y + 31, 5, HOME_X, HOME_Y + 31, 165);
+    pool.addColorStop(0,'#ffce6d');pool.addColorStop(1,'#ffce6d00');
+    ellipse(HOME_X, HOME_Y + 30, 160, 115, pool);
+    ctx.restore();
+    ellipse(HOME_X + 4, HOME_Y + 69, 129, 35, '#101e2b9e');
+    // Chimney smoke.
+    for (let i = 0; i < 4; i++) {
+      const x = HOME_X + 77 + Math.sin(t / 1050 + i * 1.6) * 14;
+      const y = HOME_Y - 139 - i * 19 - ((t / 75) % 21);
+      ctx.globalAlpha = .11 - i * .02;
+      ellipse(x, y, 18 + i * 8, 11 + i * 5, '#d3dae1');
+    }
+    ctx.globalAlpha = 1;
+    // Wood body.
+    rounded(HOME_X-103, HOME_Y-37, 206, 124, 3, '#835f49', '#442f39',6);
+    for (let j=0;j<7;j++) {
+      rounded(HOME_X-101, HOME_Y-34 + j*17.4, 201, 2, 1, '#604735');
+    }
+    // Chimney and roof.
+    rounded(HOME_X+66,HOME_Y-143,30,66,3,'#61525b','#30354d',3);
+    for(let j=0;j<4;j++) rounded(HOME_X+69,HOME_Y-137+j*13,24,2,1,'#9e8276');
+    polygon([[HOME_X-131,HOME_Y-39],[HOME_X,HOME_Y-155],[HOME_X+137,HOME_Y-36],[HOME_X+119,HOME_Y-35],[HOME_X,HOME_Y-128],[HOME_X-113,HOME_Y-34]],'#3f4553','#293248',6);
+    for (let i = 0; i < 6; i++) {
+      const x = HOME_X - 103 + i * 36;
+      const y = HOME_Y - 41 - (x - (HOME_X - 103)) * .8;
+      ctx.strokeStyle = '#68707a'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x,y+1);ctx.lineTo(x+44,y+39);ctx.stroke();
+    }
+    polygon([[HOME_X-129,HOME_Y-35],[HOME_X,HOME_Y-154],[HOME_X+135,HOME_Y-35]],null,'#a99578',4);
+    // Yellow windows.
+    ctx.save(); ctx.shadowBlur=18;ctx.shadowColor='#ffe8a2';
+    rounded(HOME_X-82,HOME_Y-10,54,49,5,'#fbd188','#4c3c3d',5);
+    rounded(HOME_X+31,HOME_Y-10,54,49,5,'#efbd74','#4c3c3d',5);
+    ctx.restore();
+    ctx.strokeStyle='#6b4c42';ctx.lineWidth=5;
+    for(let px of [HOME_X-55,HOME_X+58]){ctx.beginPath();ctx.moveTo(px,HOME_Y-10);ctx.lineTo(px,HOME_Y+40);ctx.stroke();}
+    // Grandma's glasses in window.
+    ellipse(HOME_X-61,HOME_Y+10,11,12,'#ecb98a');
+    ellipse(HOME_X-67,HOME_Y+11,5,5,null,'#564a55',2);
+    ellipse(HOME_X-55,HOME_Y+11,5,5,null,'#564a55',2);
+    polygon([[HOME_X-75,HOME_Y+3],[HOME_X-72,HOME_Y-3],[HOME_X-67,HOME_Y+2]],'#d3d7d4');
+    polygon([[HOME_X-54,HOME_Y+2],[HOME_X-48,HOME_Y-4],[HOME_X-46,HOME_Y+3]],'#d3d7d4');
+    // Child using the little game console in opposite window.
+    ellipse(HOME_X+59,HOME_Y+10,10,11,'#d5a279');
+    rounded(HOME_X+46,HOME_Y+20,25,12,2,'#3f4c63','#29374d',1);
+    ellipse(HOME_X+52,HOME_Y+26,2,2,'#e3d3b3');
+    // Door and porch.
+    rounded(HOME_X-21,HOME_Y+20,42,67,3,'#4e3540','#2e2738',4);
+    ellipse(HOME_X+11, HOME_Y+57, 3,3,'#edd8a5');
+    rounded(HOME_X-52,HOME_Y+82,104,9,3,'#66564a');
+    // House health signage.
+    rounded(HOME_X-59,HOME_Y+92,118,28,9,'#101f2ce9','#a88962',2);
+    label('外 婆 的 小 屋',HOME_X,HOME_Y+106,'#ffe6aa','center',13);
+    if (state.house < state.maxHouse/2) {
+      ctx.strokeStyle='#382a32';ctx.lineWidth=4;
+      ctx.beginPath();ctx.moveTo(HOME_X+96,HOME_Y+3);ctx.lineTo(HOME_X+84,HOME_Y+18);ctx.lineTo(HOME_X+94,HOME_Y+32);ctx.stroke();
+    }
+  }
+  function wolfPosition(wolf, t) {
+    const ringSize = ring => ring === 0 ? [456, 259] : RING_RADII[ring - 1];
+    let [rx, ry] = ringSize(wolf.ring);
+    const travel = moveFx.get(wolf.id);
+    if (travel) {
+      const dt = Math.max(0, t - travel.at);
+      if (dt > 850) moveFx.delete(wolf.id);
+      else {
+        const a = ringSize(travel.from), b = ringSize(travel.to);
+        const progress = dt / 850;
+        const eased = 1 - (1 - progress) ** 3;
+        rx = a[0] + (b[0] - a[0]) * eased;
+        ry = a[1] + (b[1] - a[1]) * eased;
+      }
+    }
+    const wobble = Math.sin(t / 520 + wolf.id * 2.43) * (wolf.kind === 'dog' ? 4 : 2.1);
+    return { x: HOME_X + Math.cos(wolf.angle) * rx, y: HOME_Y + Math.sin(wolf.angle) * ry + wobble };
+  }
+  function drawWolf(wolf, t) {
+    const p = wolfPosition(wolf,t), dog = wolf.kind === 'dog', heavy = wolf.kind === 'heavy';
+    const size = dog ? .69 : heavy ? 1.20 : wolf.kind === 'swift' ? .9 : 1;
+    ctx.save(); ctx.translate(p.x,p.y);ctx.scale(size,size);
+    if (state.selectedWolf === wolf.id && !dog) {
+      ctx.save(); ctx.shadowColor='#ffe096';ctx.shadowBlur=19;
+      ellipse(0,0,42,37,'#f5d27b33','#ffe2a3',3);
+      ctx.restore();
+    }
+    ellipse(1,29,34,9,'#0e1a2688');
+    // Cartoon tail, paws, head and oversized pointed ears.
+    polygon(dog ? [[-24,8],[-44,-4],[-35,-13],[-20,-5]] : [[-28,10],[-49,-8],[-42,-18],[-24,-5]],dog?'#c58c55':'#465263','#252d3b',2);
+    rounded(-28,7,56,26,11,dog?'#c99b68':heavy?'#6a5361':'#556374','#293747',2);
+    rounded(-25,22,13,14,4,dog?'#bd855b':'#405467');rounded(12,22,13,14,4,dog?'#bd855b':'#405467');
+    polygon(dog ? [[-28,-5],[-30,-49],[-4,-22]] : [[-28,-12],[-23,-55],[-2,-27]],dog?'#c89057':'#677b88','#283846',2);
+    polygon(dog ? [[13,-21],[33,-48],[31,-2]] : [[10,-27],[26,-58],[31,-11]],dog?'#c89057':'#677b88','#283846',2);
+    polygon([[-24,-16],[-24,-40],[-8,-24]],dog?'#dc8d8a':'#ae8a8d');
+    polygon([[18,-22],[27,-43],[25,-13]],dog?'#dc8d8a':'#ae8a8d');
+    ellipse(0,-6,34,31,dog?'#d9a36b':heavy?'#746571':'#6a7b8a','#354350',2);
+    polygon([[-13,2],[0,8],[14,2],[0,20]],dog?'#f6dec1':'#c0c9c5');
+    ellipse(-11,-12,dog?5:6,dog?7:9,'#fff0d3');ellipse(12,-12,dog?5:6,dog?7:9,'#fff0d3');
+    ellipse(-9,-11,2.5,4,'#243541');ellipse(10,-11,2.5,4,'#243541');
+    if (!dog) {
+      ctx.strokeStyle = '#2a3540'; ctx.lineWidth=4; ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-20,-25);ctx.lineTo(-7,-21);ctx.moveTo(6,-22);ctx.lineTo(19,-27);ctx.stroke();
+    }
+    ellipse(0,4,dog?5:8,dog?4:6,'#282f3a');
+    if (dog) {
+      ctx.strokeStyle='#6b4744';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,10,8,0,Math.PI);ctx.stroke();
+    } else {
+      polygon([[-10,12],[-4,22],[0,16],[4,22],[9,11]],'#e6e3d7','#35414d',1);
+    }
+    // Character badge, kept readable in reduced mobile canvas.
+    rounded(-18,-77,36,21,7,dog?'#2b715b':'#26354b',dog?'#87cba2':'#7d8fa8',1);
+    label(dog?'汪':String(wolf.id),0,-66,dog?'#e9ffe6':'#ffe7ad','center',14);
+    if (dog) {
+      label('← 退回外圈',0,48,'#c6ffbd','center',11);
+    }
+    ctx.restore();
+  }
+  function drawTorch(t) {
+    if (!fx) return;
+    const dt = t - fx.at;
+    if (dt > 1120) { fx = null; return; }
+    const [rx,ry] = RING_RADII[Math.max(0,fx.ring-1)];
+    const target = { x: HOME_X + rx*Math.cos(fx.angle), y: HOME_Y + ry*Math.sin(fx.angle) };
+    const len = Math.hypot(target.x - HOME_X,target.y - HOME_Y), angle = Math.atan2(target.y-HOME_Y,target.x-HOME_X);
+    const intensity = Math.max(0,1-dt/1100);
+    ctx.save();ctx.globalAlpha = intensity*.75;
+    ctx.translate(HOME_X, HOME_Y);
+    ctx.rotate(angle);
+    const grad=ctx.createLinearGradient(0,0,len,0);
+    grad.addColorStop(0,'#fff6b5cc');grad.addColorStop(1,'#fffad844');
+    polygon([[0,-5],[len,-43],[len,43],[0,5]],grad);
+    ctx.restore();
+    ctx.save(); ctx.shadowColor='#fff5ae'; ctx.shadowBlur=36*intensity;
+    ellipse(target.x,target.y,24+dt*.04,24+dt*.04,`rgba(255,241,169,${intensity*.68})`);
+    ctx.restore();
+    for (let i=0;i<12;i++) {
+      const a=i*2.399,rad=dt*.075;
+      ellipse(target.x+Math.cos(a)*rad,target.y+Math.sin(a)*rad*.6,3.5*intensity,3.5*intensity,`rgba(255,243,187,${intensity})`);
+    }
+  }
+  function draw(t) {
+    if (!canvas.isConnected) return;
+    resizeCanvas();
+    ctx.setTransform(canvas.width / W,0,0,canvas.height / H,0,0);
+    ctx.clearRect(0,0,W,H);
+    background(t);
+    for(let i=0;i<3;i++) drawRing(i,t);
+    drawCabin(t);
+    state.wolves.slice().sort((a,b)=>wolfPosition(a,t).y-wolfPosition(b,t).y).forEach(w=>drawWolf(w,t));
+    drawTorch(t);
+    // Dark corners guide attention into the playable space.
+    const vignette=ctx.createRadialGradient(500,305,180,500,310,650);
+    vignette.addColorStop(0,'#04091400');vignette.addColorStop(1,'#020812ae');
+    ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
+    screenshotFrame++;
+    if (drawing) requestAnimationFrame(draw);
+  }
+
+  if (stored && stored.phase !== 'won' && stored.phase !== 'lost') $('continueButton').classList.remove('hidden');
+  render();
+  requestAnimationFrame(draw);
+  window.WolfMathDebug = {
+    getState: () => JSON.parse(JSON.stringify(state)),
+    start, interact, render, endTurn: () => interact('endturn'),
+    screenshot: () => canvas.toDataURL('image/png'),
+    setState(next) { state = next; render(); persist(); }
+  };
+  if ('serviceWorker' in navigator && location.hostname !== 'appassets.androidplatform.net' && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  }
+})();
+
+</script>
+</body>
+</html>

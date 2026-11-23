@@ -1,0 +1,58 @@
+name: Build offline Android APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'web/**'
+      - 'android/**'
+      - 'tools/sync_web.py'
+      - '.github/workflows/build-android.yml'
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out game source
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK command line tools
+        uses: android-actions/setup-android@v3
+      - name: Gradle 8.10.2
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Required Android packages
+        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Rule engine regression and integrity checks
+        run: node tests/test_engine.cjs
+      - name: Generate downloadable iPhone / browser single-file edition
+        run: python3 tools/build_onefile.py
+      - name: Embed HTML5 web game into APK
+        run: python3 tools/sync_web.py
+      - name: Compile Android APK
+        run: gradle --no-daemon --project-dir android :app:assembleDebug
+      - name: APK structure verification
+        run: |
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          aapt dump badging android/app/build/outputs/apk/debug/app-debug.apk | grep -E 'package:|sdkVersion:|targetSdkVersion:'
+          unzip -l android/app/build/outputs/apk/debug/app-debug.apk | grep -q assets/www/index.html
+      - name: Upload playable web/PWA archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: WatchOutWolf-Web-PWA-v1.1
+          path: web/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: WatchOutWolf-Android-v1.1-debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30

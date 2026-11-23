@@ -1,0 +1,217 @@
+const assert = require('node:assert/strict');
+const E = require('../web/js/engine.js');
+
+let tests = 0;
+const test = (name, callback) => { callback(); tests++; console.log('PASS', name); };
+
+test('three rings, full house, question with 3 unique options', () => {
+  const s = E.newGame('easy', 123);
+  assert.equal(s.phase, 'question');
+  assert.equal(s.walls.length, 3);
+  assert.equal(s.house, 15);
+  assert.equal(new Set(s.question.options).size, 3);
+  assert.ok(s.question.options.includes(s.question.answer));
+});
+
+test('correct answer generates materials and repair phase', () => {
+  const s = E.newGame('easy', 125);
+  const out = E.answerQuestion(s, s.question.answer);
+  assert.equal(out.correct, true);
+  assert.equal(s.phase, 'defend');
+  assert.equal(s.coins, 8);
+  assert.equal(s.wood, 4);
+  assert.equal(s.actions, 2);
+  assert.equal(E.answerQuestion(s, 100000).ok, false);
+});
+
+test('math failure unlocks optional six-face die; skip is safe', () => {
+  const s = E.newGame('easy', 126);
+  E.answerQuestion(s, -9999);
+  assert.equal(s.phase, 'dice');
+  assert.equal(s.coins, 4);
+  assert.equal(E.takeAction(s, 'fortify').ok, false);
+  assert.equal(E.skipDice(s).ok, true);
+  assert.equal(s.house, 15);
+  assert.equal(s.phase, 'defend');
+});
+
+test('dice exactly matches all six advertised outcomes', () => {
+  for (let face = 1; face <= 6; face++) {
+    const s = E.newGame('nightmare', 2200 + face);
+    E.answerQuestion(s, -9999);
+    assert.equal(E.rollDice(s, face).face, face);
+    assert.equal(s.phase, face === 1 && s.house <= 0 ? 'lost' : 'defend');
+    assert.equal(s.house, face === 1 ? 10 : 12);
+    assert.equal(s.charges, face === 5 ? 1 : face === 6 ? 2 : 0);
+    assert.equal(s.wood, face === 3 ? 4 : 3);
+    assert.equal(s.coins, face === 4 ? 6 : 4);
+    assert.equal(s.wolves.length, face === 1 ? 2 : 1);
+  }
+});
+
+test('flash wolf from inner ring -> dog in middle ring', () => {
+  const s = E.newGame('easy', 127);
+  E.answerQuestion(s, s.question.answer);
+  s.wolves[0].ring = 3; s.charges = 1;
+  const res = E.flashWolf(s, s.wolves[0].id);
+  assert.equal(res.ok, true);
+  assert.equal(s.wolves[0].kind, 'dog');
+  assert.equal(s.wolves[0].ring, 2);
+  assert.equal(s.wolves[0].attack, 0);
+  assert.equal(s.charges, 0);
+  assert.equal(E.flashWolf(s, s.wolves[0].id).ok, false);
+  E.endTurn(s);
+  assert.equal(s.wolves[0].kind, 'dog');
+  E.answerQuestion(s, s.question.answer); E.endTurn(s);
+  assert.equal(s.wolves.some(w => w.id === res.wolfId), false);
+});
+
+test('flash wolf in outer ring -> dog at forest edge', () => {
+  const s = E.newGame('easy', 128);
+  E.answerQuestion(s, s.question.answer);
+  s.charges = 1;
+  E.flashWolf(s, s.wolves[0].id);
+  assert.equal(s.wolves[0].ring, 0);
+});
+
+test('buy and build consume exactly two engineering actions', () => {
+  const s = E.newGame('easy', 130);
+  E.answerQuestion(s, s.question.answer);
+  assert.equal(E.takeAction(s, 'buyWood', 0).ok, true);
+  const start = s.walls[0];
+  assert.equal(E.takeAction(s, 'fortify', 0).ok, true);
+  assert.equal(s.walls[0], Math.min(E.MAX_WALLS[0], start + 4));
+  assert.equal(s.actions, 0);
+  assert.equal(E.takeAction(s, 'fortify', 1).ok, false);
+});
+
+test('trap pushes attacker one ring out, then stun expires', () => {
+  const s = E.newGame('easy', 142);
+  E.answerQuestion(s, s.question.answer);
+  s.wolves[0].ring = 3;
+  s.stone = 1;
+  E.takeAction(s, 'trap', 2);
+  assert.equal(s.traps[2], 1);
+  E.endTurn(s);
+  assert.equal(s.traps[2], 0);
+  assert.equal(s.wolves[0].ring, 2);
+  assert.equal(s.wolves[0].stunned, 1);
+});
+
+test('outer-ring trap pushes a wolf into forest and it leaves safely', () => {
+  const s = E.newGame('easy', 512);
+  E.answerQuestion(s, s.question.answer);
+  s.stone = 1;
+  assert.equal(E.takeAction(s, 'trap', 0).ok, true);
+  const wolfId = s.wolves[0].id;
+  const first = E.endTurn(s);
+  assert.equal(first.ok, true);
+  const wolf = s.wolves.find(w => w.id === wolfId);
+  assert.ok(wolf);
+  assert.equal(wolf.ring, 0);
+  assert.equal(wolf.stunned, 1);
+  E.answerQuestion(s, s.question.answer);
+  const second = E.endTurn(s);
+  assert.equal(second.ok, true);
+  assert.equal(s.wolves.some(w => w.id === wolfId), false);
+});
+
+test('flashlight is free action and target can never be flashed twice', () => {
+  const s = E.newGame('easy', 991);
+  E.answerQuestion(s, s.question.answer);
+  const actions = s.actions;
+  s.charges = 2;
+  assert.equal(E.flashWolf(s, s.wolves[0].id).ok, true);
+  assert.equal(s.actions, actions);
+  assert.equal(s.charges, 1);
+  assert.equal(E.flashWolf(s, s.wolves[0].id).ok, false);
+  assert.equal(s.charges, 1);
+});
+
+test('distinct deterministic seeds create reproducible game and dice outcomes', () => {
+  const a=E.newGame('nightmare', 7891), b=E.newGame('nightmare', 7891);
+  assert.deepEqual(a,b);
+  for(const s of [a,b]) { E.answerQuestion(s, -999); E.rollDice(s); }
+  assert.deepEqual(a,b);
+});
+
+test('browser integrity: direct flashlight overrides earlier selection, dice sectors align', () => {
+  const fs = require('node:fs');
+  const app = fs.readFileSync(require('node:path').join(__dirname, '../web/js/app.js'), 'utf8');
+  assert.match(app, /Number\(param\) \|\| state\.selectedWolf/);
+  assert.match(app, /\(i \+ \.5\) \* Math\.PI \/ 3/);
+  assert.match(app, /const face = result\.face;\s*persist\(\)/);
+});
+
+test('math question generation in both modes never has negative options', () => {
+  for(const mode of ['easy', 'nightmare']) {
+    for(let seed=1;seed<=100;seed++) {
+      const s=E.newGame(mode,seed);
+      for(let i=0;i<18;i++) {
+        s.turn=i+1;
+        s.question=E.makeQuestion(s);
+        assert.equal(new Set(s.question.options).size,3);
+        assert.ok(s.question.options.includes(s.question.answer));
+        assert.ok(s.question.options.every(n => Number.isInteger(n) && n >= 0));
+      }
+    }
+  }
+});
+
+test('full game ends in victory or legitimate loss, never frozen phase', () => {
+  for(let seed=1;seed<=100;seed++) {
+    const s=E.newGame(seed%2?'easy':'nightmare',seed);
+    let iterations=0;
+    while(!['won','lost'].includes(s.phase) && iterations++<30) {
+      if(s.phase === 'question') E.answerQuestion(s,s.question.answer);
+      if(s.phase === 'defend') E.endTurn(s);
+    }
+    assert.ok(['won','lost'].includes(s.phase), `seed ${seed} did not end`);
+    assert.ok(iterations<=18);
+  }
+});
+
+function agentRun(seed,mode,accuracy) {
+  const s=E.newGame(mode,seed);
+  let rng = (seed ^ 0x9e3779b9) >>> 0;
+  const draw = () => { rng ^= rng << 13; rng ^= rng >>> 17; rng ^= rng << 5; return (rng >>> 0) / 4294967296; };
+  while(!['won','lost'].includes(s.phase)) {
+    if(s.phase === 'question') {
+      if(accuracy===1 || draw() < accuracy) E.answerQuestion(s,s.question.answer);
+      else E.answerQuestion(s,-99);
+    }
+    if(s.phase === 'dice') E.rollDice(s);
+    if(s.phase !== 'defend') continue;
+    // Use flashlight against the greatest immediate risk.
+    while (s.charges > 0) {
+      const target=s.wolves.filter(w=>w.kind!=='dog').sort((a,b)=>b.ring-a.ring)[0];
+      if(!target) break;
+      E.flashWolf(s,target.id);
+    }
+    while(s.actions>0) {
+      if(s.house<11 && s.wood>=3) { E.takeAction(s,'repair'); continue; }
+      let dangerRing=[...s.wolves].filter(w=>w.kind!=='dog').sort((a,b)=>b.ring-a.ring)[0];
+      let ring=dangerRing?dangerRing.ring-1:0;
+      if(s.wood>=2 && s.walls[ring]<=E.MAX_WALLS[ring]-3) {
+        E.takeAction(s,'fortify',ring);continue;
+      }
+      if(s.wood>=2 && s.walls[0]<=7){E.takeAction(s,'fortify',0);continue;}
+      if(s.coins>=4 && s.wood<7) { E.takeAction(s,'buyWood');continue; }
+      if(s.wood>=2 && s.walls[ring]<E.MAX_WALLS[ring]) { E.takeAction(s,'fortify',ring);continue; }
+      break;
+    }
+    E.endTurn(s);
+  }
+  return s;
+}
+for (const mode of ['easy','nightmare']) {
+  for (const accuracy of [1,.70]) {
+    let victories=0, avgHouse=0;
+    for(let i=1;i<=200;i++) {
+      const s=agentRun(i * 2183,mode,accuracy);
+      if(s.phase==='won'){victories++;avgHouse+=s.house;}
+    }
+    console.log('BALANCE',mode,'accuracy=',accuracy,'wins=',victories,'/200','avgWinnerHouse=',victories?(avgHouse/victories).toFixed(1):'-');
+  }
+}
+console.log(`Passed ${tests} engine test suites.`);

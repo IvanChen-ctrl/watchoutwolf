@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "算数不好，狼就会来！— 狼来了·算数防线",
+  "short_name": "狼来了·算数",
+  "description": "三层防线守小屋；数学买材料，命运骰换手电筒，狼变吉娃娃。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#10192c",
+  "background_color": "#080f1c",
+  "lang": "zh-CN",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}

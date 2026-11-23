@@ -1,0 +1,19 @@
+PASS three rings, full house, question with 3 unique options
+PASS correct answer generates materials and repair phase
+PASS math failure unlocks optional six-face die; skip is safe
+PASS dice exactly matches all six advertised outcomes
+PASS flash wolf from inner ring -> dog in middle ring
+PASS flash wolf in outer ring -> dog at forest edge
+PASS buy and build consume exactly two engineering actions
+PASS trap pushes attacker one ring out, then stun expires
+PASS outer-ring trap pushes a wolf into forest and it leaves safely
+PASS flashlight is free action and target can never be flashed twice
+PASS distinct deterministic seeds create reproducible game and dice outcomes
+PASS browser integrity: direct flashlight overrides earlier selection, dice sectors align
+PASS math question generation in both modes never has negative options
+PASS full game ends in victory or legitimate loss, never frozen phase
+BALANCE easy accuracy= 1 wins= 200 /200 avgWinnerHouse= 14.6
+BALANCE easy accuracy= 0.7 wins= 200 /200 avgWinnerHouse= 13.9
+BALANCE nightmare accuracy= 1 wins= 200 /200 avgWinnerHouse= 12.0
+BALANCE nightmare accuracy= 0.7 wins= 195 /200 avgWinnerHouse= 11.1
+Passed 14 engine test suites.
