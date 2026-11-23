@@ -21,17 +21,21 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Verify preinstalled Android SDK on ubuntu runner
+      - name: Configure preinstalled Android SDK command-line tools
         run: |
           echo "ANDROID_HOME=${ANDROID_HOME}"
-          command -v sdkmanager
-          sdkmanager --version
+          SDKMANAGER="$(find "${ANDROID_HOME}/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          test -n "${SDKMANAGER}" && test -x "${SDKMANAGER}"
+          echo "$(dirname "${SDKMANAGER}")" >> "${GITHUB_PATH}"
+          "${SDKMANAGER}" --version
       - name: Gradle 8.10.2
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
       - name: Required Android packages
-        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
       - name: Rule engine regression and integrity checks
         run: node tests/test_engine.cjs
       - name: Generate downloadable iPhone / browser single-file edition
