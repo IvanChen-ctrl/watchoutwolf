@@ -21,8 +21,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Android SDK command line tools
-        uses: android-actions/setup-android@v3
+      - name: Verify preinstalled Android SDK on ubuntu runner
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          command -v sdkmanager
+          sdkmanager --version
       - name: Gradle 8.10.2
         uses: gradle/actions/setup-gradle@v4
         with:
