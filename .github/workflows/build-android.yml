@@ -47,7 +47,7 @@ jobs:
       - name: APK structure verification
         run: |
           test -s android/app/build/outputs/apk/debug/app-debug.apk
-          aapt dump badging android/app/build/outputs/apk/debug/app-debug.apk | grep -E 'package:|sdkVersion:|targetSdkVersion:'
+          "${ANDROID_HOME}/build-tools/35.0.0/aapt" dump badging android/app/build/outputs/apk/debug/app-debug.apk | grep -E 'package:|sdkVersion:|targetSdkVersion:'
           unzip -l android/app/build/outputs/apk/debug/app-debug.apk | grep -q assets/www/index.html
       - name: Upload playable web/PWA archive
         uses: actions/upload-artifact@v4
