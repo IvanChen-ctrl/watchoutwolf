@@ -22,18 +22,21 @@
         <span class="brand-text"><strong>算数不好，狼就会来！</strong><small>WOLF MATH · 防线计划</small></span>
       </a>
       <div class="header-actions">
+        <button id="saveBtn" type="button" class="ghost-button">存档</button>
+        <button id="loadBtn" type="button" class="ghost-button">读档</button>
         <button id="soundBtn" type="button" class="icon-button" aria-label="切换音效" title="切换音效">♫</button>
         <button id="helpBtn" type="button" class="icon-button" aria-label="游戏说明" title="游戏说明">?</button>
         <button id="restartBtn" type="button" class="ghost-button">重开</button>
       </div>
     </header>
 
-    <div class="style-toolbar" aria-label="切换游戏画风"><div class="style-copy"><strong>🎨 双画风</strong><span>同一局游戏 · 随时切换 · 不丢进度</span></div><div class="style-segments" role="group" aria-label="游戏画面风格"><button type="button" data-style="classic" aria-pressed="true">🧮 经典堡垒</button><button type="button" data-style="drama" aria-pressed="false">🎬 丑狼短剧</button></div></div>
+    <div class="style-toolbar" aria-label="切换游戏画风"><div class="style-copy"><strong>🎨 双画风</strong><span>同一局游戏 · 随时切换 · 不丢进度；短剧模式追加 PS1 粗糙 3D 质感</span></div><div class="style-segments" role="group" aria-label="游戏画面风格"><button type="button" data-style="classic" aria-pressed="true">🧮 经典堡垒</button><button type="button" data-style="drama" aria-pressed="false">🎬 丑狼短剧</button></div></div>
     <div class="main-layout">
       <section class="game-column" aria-label="堡垒地图和战场">
         <div class="status-line">
           <div class="night-summary"><span class="twinkle">✦</span><span id="nightLabel">第 1 夜</span><small id="turnLabel">回合 1 / 18</small></div>
           <div class="phase-display"><span id="phaseDot" class="phase-dot"></span><span id="phaseLabel">答题中</span></div>
+          <div class="timer-mini">⏳ <span id="countdownLabel">35s</span></div>
           <div class="score-mini">★ <span id="scoreLabel">0</span></div>
         </div>
 
@@ -56,9 +59,9 @@
         </div>
 
         <div class="defense-box card-surface">
-          <div class="section-heading"><div><span class="eyebrow">DEFENSE STATUS · 4 TYPES</span><h2>三圈 · 四类防御</h2></div><small>点击选中，陷阱/武器会部署在该圈</small></div>
+          <div class="section-heading"><div><span class="eyebrow">DEFENSE STATUS · 4 TYPES</span><h2>三圈 · 四类防御</h2></div><small>点击选中，陷阱/武器与地形升级会部署在该圈</small></div>
           <div id="defenseRings" class="ring-grid"></div>
-          <div class="arsenal-legend"><span>⚙ 弹簧夹：弹退</span><span>🕸 黏网：困住</span><span>🎯 哨塔：自动劝退</span><span>🔔 警报：群狼变哑</span></div>
+          <div class="arsenal-legend"><span>⚙ 弹簧夹：弹退</span><span>🕸 黏网：困住</span><span>🎯 哨塔：自动劝退</span><span>🔔 警报：群狼变哑</span><span>🗺 地形：分圈升级</span></div>
         </div>
         <div class="story-box card-surface"><div class="section-heading"><div><span class="eyebrow">NIGHT WATCH LOG</span><h2>夜巡记录</h2></div><span class="book-icon">☷</span></div><ul id="battleFeed" class="battle-feed" aria-live="polite"></ul></div>
       </section>
@@ -84,12 +87,12 @@
       <div class="intro-mechanics"><div>🧮<span>答题筹钱</span></div><div>🎯<span>塔防陷阱</span></div><div>🎲<span>六面命运</span></div><div>🔦<span>照狼变狗</span></div></div>
       <div class="intro-buttons"><button class="primary-button large" data-mode="easy">开始守夜 <span>→</span></button><button class="secondary-button" data-mode="nightmare">惊悚进阶模式</button></div>
       <button id="continueButton" class="continue-button hidden">继续上次守夜</button>
-      <p class="smallprint">规则：每回合答1题、做最多2次工程操作，再结束回合触发狼群行动。撑过3夜即胜利。</p>
+      <p class="smallprint">规则：每回合答1题、做最多2次工程操作，再结束回合触发狼群行动。每阶段带倒计时；撑过3夜即胜利。</p>
     </div>
   </div>
 
   <div class="overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
-    <div class="dialog-box help-dialog"><button class="modal-close" id="closeHelp" aria-label="关闭说明">×</button><span class="eyebrow">SURVIVAL MANUAL</span><h2 id="helpTitle">守夜手册</h2><ol><li><b>答题</b>：正确获得金币、木材。连续答对4题还会得到1格手电电量。</li><li><b>采购与修筑</b>：4金币买2木材，5金币买1石材。每回合最多进行2次采购或工程行动。</li><li><b>命运骰</b>：答错题才能掷六面骰。1面灾厄（小屋−2生命并来狼），5与6面获得手电电量，其余面是小奖或落空。</li><li><b>新防御</b>：弹簧夹弹退狼；冰淇淋黏网让狼连续两轮不能攻击；弹弓哨塔可升级至2级，每回合自动削减狼的胆量；月光警报铃每3回合吓停一只狼两轮。所有装备均需资源和工程行动。</li><li><b>手电筒</b>：点击任意狼选中，再点击“照射”。每次消耗1格电量，狼变吉娃娃并退回外侧一圈；在最外圈的会退入森林。吉娃娃不再攻击，稍后跑掉。</li><li><b>防线</b>：从外圈木栅到中圈石墙、内圈铁门。狼突破一圈后，下回合才能往内圈移动。</li><li><b>胜利</b>：存活18回合，守过3个夜晚。每6回合天亮，狼撤退、外婆补充少量物资。</li></ol><p class="help-note">苹果手机：通过 Safari 打开部署好的 HTTPS 网页，再在分享菜单选择“添加到主屏幕”，可作为全屏网页应用游玩。</p><button class="primary-button" id="okHelp">继续守夜</button></div>
+    <div class="dialog-box help-dialog"><button class="modal-close" id="closeHelp" aria-label="关闭说明">×</button><span class="eyebrow">SURVIVAL MANUAL</span><h2 id="helpTitle">守夜手册</h2><ol><li><b>答题</b>：正确获得金币、木材。连续答对4题还会得到1格手电电量。</li><li><b>采购与修筑</b>：4金币买2木材，5金币买1石材。每回合最多进行2次采购或工程行动，也能手动点右上角存档。</li><li><b>命运骰</b>：答错题才能掷六面骰。1面灾厄（小屋−2生命并来狼），5与6面获得手电电量，其余面是小奖或落空。</li><li><b>新防御</b>：弹簧夹弹退狼；冰淇淋黏网让狼连续两轮不能攻击；弹弓哨塔可升级至2级，每回合自动削减狼的胆量；月光警报铃每3回合吓停一只狼两轮；三圈还能分别升级荆棘坡地、泥泞壕沟和高地月台。</li><li><b>手电筒</b>：点击任意狼选中，再点击“照射”。每次消耗1格电量，狼变吉娃娃并退回外侧一圈；在最外圈的会退入森林。吉娃娃不再攻击，稍后跑掉。</li><li><b>防线</b>：从外圈木栅到中圈石墙、内圈铁门。狼突破一圈后，下回合才能往内圈移动。</li><li><b>胜利</b>：存活18回合，守过3个夜晚。每6回合天亮，狼撤退、外婆补充少量物资，并进入关卡之间的剧情过场。</li></ol><p class="help-note">苹果手机：通过 Safari 打开部署好的 HTTPS 网页，再在分享菜单选择“添加到主屏幕”，可作为全屏网页应用游玩。</p><button class="primary-button" id="okHelp">继续守夜</button></div>
   </div>
 
   <div class="overlay" id="endOverlay" role="dialog" aria-modal="true" aria-labelledby="endTitle" aria-hidden="true"><div class="dialog-box end-dialog"><span id="endIcon" class="end-icon">☀</span><span class="eyebrow" id="endEyebrow">FINAL REPORT</span><h2 id="endTitle">天亮了！</h2><p id="endReason"></p><div class="end-stats" id="endStats"></div><button class="primary-button large" data-restart="yes">再守一夜 →</button></div></div>

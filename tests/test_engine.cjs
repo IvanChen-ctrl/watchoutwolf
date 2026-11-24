@@ -158,16 +158,78 @@ test('math question generation in both modes never has negative options', () => 
   }
 });
 
+test('math puzzles are mathematically correct across 18 rounds and difficulty tiers', () => {
+  const solveHint = hint => {
+    const expression = hint.split(' = ')[0].replaceAll('×', '*').replaceAll('÷', '/').replaceAll('−', '-');
+    assert.match(expression, /^[0-9+*/() .-]+$/);
+    return Function('return (' + expression + ')')();
+  };
+  for(const mode of ['easy','nightmare']) {
+    const topics = new Set();
+    for(let seed = 1; seed <= 400; seed++) {
+      const s = E.newGame(mode, seed);
+      for(let turn = 1; turn <= 18; turn++) {
+        s.turn = turn;
+        const q = E.makeQuestion(s);
+        topics.add(q.theme);
+        assert.equal(q.id, turn);
+        assert.equal(q.chapter, E.nightOf(turn));
+        assert.ok(Number.isSafeInteger(q.answer) && q.answer >= 0, `${mode} ${turn} ${q.prompt}`);
+        assert.equal(q.answer, solveHint(q.hint), `${mode} ${turn}: ${q.prompt} ${q.hint}`);
+        assert.equal(q.options.filter(n => n === q.answer).length, 1);
+        if(q.theme === '狼群波次') assert.doesNotMatch(q.prompt, /少 -[0-9]/);
+        if(q.theme === '复杂补差') assert.ok(q.answer >= 0);
+      }
+    }
+    assert.ok(topics.size >= 12, `insufficient diverse topics: ${topics.size}`);
+  }
+});
+
+test('save migration preserves RNG and original question and makes dogs harmless', () => {
+  for(const version of [1,2,3,4,5]) {
+    const original = E.newGame('nightmare', 4975);
+    const wolf = original.wolves[0];
+    wolf.kind='dog'; wolf.attack=7; wolf.weapon='攻城槌'; wolf.weaponIcon='🪵';
+    wolf.courage=0; wolf.dogTurns=2;
+    original.seed=0x12345678;
+    original.version=version;
+    original.question={prompt:'旧问题仍可回答', answer:8, options:[8,7,9],hint:'3 + 5 = 8', id:original.turn};
+    const saved=JSON.parse(JSON.stringify(original));
+    const loaded=E.migrateSave(saved);
+    assert.equal(loaded.version,5);
+    assert.equal(loaded.seed,original.seed,'save migration must not draw random values');
+    assert.equal(loaded.question.prompt,'旧问题仍可回答');
+    assert.equal(loaded.question.theme,'旧版守夜算术');
+    assert.equal(loaded.wolves[0].attack,0,'no rescued dog should attack');
+    assert.equal(loaded.wolves[0].weapon,'夹尾巴');
+    assert.equal(loaded.wolves[0].dogTurns,2);
+  }
+});
+
+test('wolf weapon strength increases only at later nights', () => {
+  const s=E.newGame('easy',100);
+  const first=s.wolves[0];
+  assert.equal(first.weapon,'利爪');
+  assert.equal(first.attack,2);
+  s.turn=13; s.wolves=[];
+  // Spawn from a fixed dice fallback by entering the second night.
+  E.answerQuestion(s,0); // wrong answers open the die without mutating a valid old target.
+  assert.equal(E.getWolfWeapon({kind:'heavy'},13,'easy'),'攻城槌');
+  assert.equal(E.getWolfWeapon({kind:'sneak'},13,'easy'),'火油瓶');
+  assert.equal(E.getWolfWeapon({kind:'dog',weapon:'夹尾巴'},13,'easy'),'夹尾巴');
+});
+
 test('full game ends in victory or legitimate loss, never frozen phase', () => {
   for(let seed=1;seed<=100;seed++) {
     const s=E.newGame(seed%2?'easy':'nightmare',seed);
     let iterations=0;
-    while(!['won','lost'].includes(s.phase) && iterations++<30) {
+    while(!['won','lost'].includes(s.phase) && iterations++<40) {
       if(s.phase === 'question') E.answerQuestion(s,s.question.answer);
+      if(s.phase === 'interlude') E.continueStory(s);
       if(s.phase === 'defend') E.endTurn(s);
     }
     assert.ok(['won','lost'].includes(s.phase), `seed ${seed} did not end`);
-    assert.ok(iterations<=18);
+    assert.ok(iterations<=21);
   }
 });
 
@@ -181,6 +243,7 @@ function agentRun(seed,mode,accuracy) {
       else E.answerQuestion(s,-99);
     }
     if(s.phase === 'dice') E.rollDice(s);
+    if(s.phase === 'interlude') { E.continueStory(s); continue; }
     if(s.phase !== 'defend') continue;
     // Use flashlight against the greatest immediate risk.
     while (s.charges > 0) {
@@ -214,7 +277,7 @@ for (const mode of ['easy','nightmare']) {
     console.log('BALANCE',mode,'accuracy=',accuracy,'wins=',victories,'/200','avgWinnerHouse=',victories?(avgHouse/victories).toFixed(1):'-');
   }
 }
-// v1.2 arsenal and backward-compatible saves.
+// v1.4 arsenal, progression and backward-compatible saves.
 test('version 1 saves upgrade without resetting seed, progress or wolves', () => {
   const old=E.newGame('easy',1234);
   E.answerQuestion(old,old.question.answer); old.turn=5;old.seed=987654;
@@ -222,7 +285,7 @@ test('version 1 saves upgrade without resetting seed, progress or wolves', () =>
   for(const w of old.wolves){delete w.courage;delete w.maxCourage;}
   old.version=1;
   const loaded=E.migrateSave(JSON.parse(JSON.stringify(old)));
-  assert.equal(loaded.version,2); assert.equal(loaded.turn,5);assert.equal(loaded.seed,987654);
+  assert.equal(loaded.version,5); assert.equal(loaded.turn,5);assert.equal(loaded.seed,987654);
   assert.deepEqual(loaded.nets,[0,0,0]);assert.deepEqual(loaded.towers,[0,0,0]);
   assert.equal(loaded.wolves[0].courage,3);assert.equal(loaded.wolves[0].id,old.wolves[0].id);
   assert.equal(E.migrateSave(null),null);

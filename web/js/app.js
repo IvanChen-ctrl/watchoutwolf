@@ -23,6 +23,11 @@
   let rolling = false;
   let lastView = '';
   let screenshotFrame = 0;
+  let timerTicker = null;
+  let lastTimerSecond = null;
+  const psxCanvas = document.createElement('canvas');
+  psxCanvas.width = 320; psxCanvas.height = 200;
+  const psxCtx = psxCanvas.getContext('2d', { alpha: false });
 
   const stars = Array.from({ length: 65 }, (_, i) => ({
     x: ((i * 378.17 + 71) % 930) + 30,
@@ -53,8 +58,14 @@
       return G.migrateSave(parsed);
     } catch (_) { return null; }
   }
-  function persist() { try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {} }
-  function resetSave() { try { localStorage.removeItem(storageKey); } catch (_) {} }
+  function persist() { try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {} updateLoadButton(); }
+  function resetSave() { try { localStorage.removeItem(storageKey); } catch (_) {} updateLoadButton(); }
+  function updateLoadButton() {
+    const exists = !!loadSave() || !!stored;
+    const btn = $('loadBtn');
+    if (btn) btn.disabled = !exists;
+    if (btn) btn.classList.toggle('disabled', !exists);
+  }
   function escapeText(str) {
     return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   }
@@ -89,12 +100,85 @@
     $('impactLayer').innerHTML = `<div class="impact-word">${escapeText(text)}</div>`;
     setTimeout(() => { $('impactLayer').innerHTML = ''; }, 1050);
   }
+
+  function phaseLimit(phase) {
+    if (phase === 'question') return state.mode === 'nightmare' ? 28 : 35;
+    if (phase === 'dice') return 12;
+    if (phase === 'defend') return state.mode === 'nightmare' ? 24 : 30;
+    if (phase === 'interlude') return 0;
+    return 0;
+  }
+  function refreshCountdownUI() {
+    const seconds = Math.max(0, Math.ceil(Number(state.timer?.secondsLeft) || 0));
+    $('countdownLabel').textContent = seconds ? `${seconds}s` : '—';
+    const box = $('countdownLabel').parentElement;
+    if (!box) return;
+    box.classList.toggle('is-warning', seconds > 0 && seconds <= 10);
+    box.classList.toggle('is-danger', seconds > 0 && seconds <= 5);
+  }
+  function resetCountdown(force = false) {
+    const limit = phaseLimit(state.phase);
+    if (limit <= 0) {
+      state.timer = { phase: state.phase, secondsLeft: 0 };
+      refreshCountdownUI();
+      return;
+    }
+    if (!force && state.timer && state.timer.phase === state.phase && Number(state.timer.secondsLeft) > 0) { refreshCountdownUI(); return; }
+    state.timer = { phase: state.phase, secondsLeft: limit };
+    lastTimerSecond = null;
+    refreshCountdownUI();
+  }
+  function processTimerExpiry() {
+    if (rolling || $('introOverlay').classList.contains('visible') || $('helpOverlay').classList.contains('visible') || state.phase === 'won' || state.phase === 'lost') return;
+    if (state.phase === 'question') {
+      toast('倒计时结束：系统判定本题作答失败。'); impact('超时！'); playSound('wrong'); vibrate([45, 45, 85]);
+      const before = state.phase; const result = G.answerQuestion(state, NaN);
+      if (result?.ok) { resetCountdown(true); persist(); render(); }
+    } else if (state.phase === 'dice') {
+      toast('倒计时结束：自动安全跳过命运骰。'); const result = G.skipDice(state);
+      if (result?.ok) { resetCountdown(true); persist(); render(); }
+    } else if (state.phase === 'defend') {
+      toast('倒计时结束：自动结算本回合防守。'); impact('时间到');
+      const before = new Map(state.wolves.map(w => [w.id, { angle: w.angle, ring: w.ring }]));
+      const result = G.endTurn(state);
+      if (result?.ok) {
+        for (const hit of result.event.projectiles) defenseFx.push({ kind: 'shot', ring: hit.ring, target: before.get(hit.wolfId), at: performance.now() });
+        for (const id of result.event.alarms) defenseFx.push({ kind: 'alarm', target: before.get(id), at: performance.now() });
+        for (const id of result.event.netted) defenseFx.push({ kind: 'net', target: before.get(id), at: performance.now() });
+        for (const id of result.event.trapped) defenseFx.push({ kind: 'spring', target: before.get(id), at: performance.now() });
+        playSound(result.event.damageHouse ? 'wolf' : result.event.projectiles.length ? 'tower' : 'tick');
+        resetCountdown(true); persist(); render();
+        if (state.phase === 'won' || state.phase === 'lost') setTimeout(displayEnding, 700);
+      }
+    } else if (state.phase === 'interlude') {
+      const result = G.continueStory(state);
+      if (result?.ok) { resetCountdown(true); persist(); render(); }
+    }
+  }
+  function startTimerLoop() {
+    if (timerTicker) clearInterval(timerTicker);
+    timerTicker = setInterval(() => {
+      if (!state || !state.timer) return;
+      if (phaseLimit(state.phase) <= 0 || $('introOverlay').classList.contains('visible') || rolling) { refreshCountdownUI(); return; }
+      state.timer.phase = state.phase;
+      state.timer.secondsLeft = Math.max(0, (Number(state.timer.secondsLeft) || 0) - 1);
+      const rounded = Math.ceil(state.timer.secondsLeft);
+      if (rounded !== lastTimerSecond) {
+        lastTimerSecond = rounded;
+        refreshCountdownUI();
+        persist();
+      }
+      if (state.timer.secondsLeft <= 0) processTimerExpiry();
+    }, 1000);
+  }
+
   function start(mode) {
     state = G.newGame(mode, (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0);
     stored = null;
     $('introOverlay').classList.remove('visible');
     $('endOverlay').classList.remove('visible');
-    render(); persist();
+    resetCountdown(true);
+    render(); persist(); updateLoadButton();
     playSound('correct');
   }
   function continueGame() {
@@ -102,7 +186,8 @@
     state = stored;
     stored = null;
     $('introOverlay').classList.remove('visible');
-    render();
+    resetCountdown(true);
+    render(); updateLoadButton();
     if (state.phase === 'won' || state.phase === 'lost') displayEnding();
   }
   function confirmRestart() {
@@ -113,8 +198,25 @@
     $('endOverlay').classList.remove('visible');
     $('introOverlay').setAttribute('aria-hidden', 'false');
   }
+
+  function manualSave() {
+    persist();
+    toast('已手动存档。可以稍后点“读档”继续。');
+  }
+  function manualLoad() {
+    const saved = loadSave();
+    if (!saved) { toast('当前没有可读取的存档。'); return; }
+    stored = saved;
+    state = saved;
+    $('introOverlay').classList.remove('visible');
+    $('endOverlay').classList.remove('visible');
+    resetCountdown(true);
+    render();
+    toast('读档成功，继续守夜。');
+  }
   function interact(action, param) {
     if (rolling) return;
+    const previousPhase = state.phase;
     let result;
     if (action === 'answer') {
       result = G.answerQuestion(state, Number(param));
@@ -139,6 +241,8 @@
         if (result.event.damageHouse) { impact(`小屋 -${result.event.damageHouse} ♥`); vibrate(90); }
         else if (result.event.dawn) impact('黎明补给 +');
       }
+    } else if (action === 'continueStory') {
+      result = G.continueStory(state);
     } else if (action === 'flash') {
       const selected = Number(param) || state.selectedWolf; // Direct wolf-card flashlight always wins over stale selection.
       const wolf = state.wolves.find(w => w.id === selected);
@@ -154,6 +258,7 @@
     }
     if (!result?.ok) toast(result?.message || '操作暂时不可用。');
     if (result?.ok) {
+      if (state.phase !== previousPhase || ['answer','skip','endturn','continueStory'].includes(action)) resetCountdown(true);
       if (state.lastResult && (action === 'answer' || action === 'flash')) toast(`${state.lastResult.title} ${state.lastResult.text}`);
       persist(); render();
       if (state.phase === 'won' || state.phase === 'lost') setTimeout(displayEnding, 700);
@@ -184,6 +289,7 @@
     }, 1940);
     setTimeout(() => {
       overlay.remove(); rolling = false;
+      resetCountdown(true);
       persist(); render();
       toast(result.info.detail);
       if (face >= 5) impact('手电电量 +' + (face === 6 ? 2 : 1));
@@ -194,6 +300,7 @@
     const night = G.nightOf(state.turn);
     $('nightLabel').textContent = `第 ${night} 夜`;
     $('turnLabel').textContent = `回合 ${state.turn} / ${G.TOTAL_TURNS}`;
+    refreshCountdownUI();
     const phaseText = { question: '答题中', dice: '命运骰', defend: '修筑防线', won: '胜利！', lost: '失守！' };
     $('phaseLabel').textContent = phaseText[state.phase] || state.phase;
     $('phaseDot').style.background = state.phase === 'dice' ? '#ffba67' : state.phase === 'lost' ? '#f47c80' : '#9be4af';
@@ -206,14 +313,19 @@
     $('woodNum').textContent = state.wood;
     $('stoneNum').textContent = state.stone;
     $('batteryNum').textContent = state.charges;
-    $('missionText').textContent = state.phase === 'question' ? '答题兑换建材；买陷阱、黏网、哨塔与警报铃。' : state.phase === 'dice' ? '算错可掷命运骰：好运拿到手电，狼变吉娃娃并退回外圈。' : state.phase === 'defend' ? '选中防线部署武器，永久哨塔每轮自动发射；手电可临时救急。' : '这一夜的结果已经揭晓。';
+    $('missionText').textContent = state.phase === 'question' ? '答题兑换建材；买陷阱、黏网、哨塔、警报铃与分圈地形升级。场景会从院子逐步升级到堡垒。'
+      : state.phase === 'dice' ? '算错可掷命运骰：好运拿到手电，狼变吉娃娃并退回外圈。'
+      : state.phase === 'defend' ? '选中防线部署武器与地形。永久哨塔每轮自动发射；手电可临时救急。'
+      : state.phase === 'interlude' ? '关卡过场：承接剧情，准备进入下一夜。'
+      : '这一夜的结果已经揭晓。';
     const line = state.phase === 'dice' ? '外婆：数学没算对？现在还要拿运气补考。'
       : state.phase === 'defend' ? '女儿：冰淇淋是我送的。丑娘：那我还得报恩。'
+      : state.phase === 'interlude' ? (state.storyCard?.kicker || '下一夜的剧情正在接上。')
       : state.phase === 'won' ? '导演：狼没受伤，自尊心有待修复。'
       : state.phase === 'lost' ? '外婆：墙没了，床下那位先出来帮忙。'
       : G.nightOf(state.turn) === 1 ? '外婆：孙子还在玩唯一那台掌机。床底下有声音……'
       : G.nightOf(state.turn) === 2 ? '孙子：我们有防御塔。丑娘（床下）：别朝屋里开。'
-      : '女儿：第三夜要到了。外婆：我先检查一下床底。';
+      : '女儿：第三夜要到了，院子已经快变成堡垒，连画面都像 PS1 噩梦。';
     $('sceneCaption').textContent = line;
     renderRings(); renderPhase(); renderWolves(); renderFeed();
     if (!drawing) draw(performance.now());
@@ -222,7 +334,7 @@
   function renderRings() {
     $('defenseRings').innerHTML = G.RING_NAMES.map((label, i) => {
       const health = state.walls[i], max = G.MAX_WALLS[i];
-      return `<button type="button" class="ring-button ${state.selectedRing === i ? 'selected' : ''}" data-ring="${i}" aria-pressed="${state.selectedRing === i}"><div class="ring-header"><span class="ring-name"><span class="ring-symbol">${['Ⅰ', 'Ⅱ', 'Ⅲ'][i]}</span>${label}</span></div><div class="ring-meter"><div class="${health / max < .35 ? 'critical' : ''}" style="width:${100 * health / max}%"></div></div><div class="ring-footer"><span>${health === 0 ? '已被突破' : '耐久'}</span><span class="ring-health">${health}/${max}</span></div><div class="ring-arsenal">⚙ ${state.traps[i]}　🕸 ${state.nets[i]}<span>🎯 ${state.towers[i]}级　🔔 ${state.alarms[i] ? (state.alarmCooldowns[i] ? '冷却' : '待命') : '—'}</span></div></button>`;
+      return `<button type="button" class="ring-button ${state.selectedRing === i ? 'selected' : ''}" data-ring="${i}" aria-pressed="${state.selectedRing === i}"><div class="ring-header"><span class="ring-name"><span class="ring-symbol">${['Ⅰ', 'Ⅱ', 'Ⅲ'][i]}</span>${label}</span></div><div class="ring-meter"><div class="${health / max < .35 ? 'critical' : ''}" style="width:${100 * health / max}%"></div></div><div class="ring-footer"><span>${health === 0 ? '已被突破' : '耐久'}</span><span class="ring-health">${health}/${max}</span></div><div class="ring-arsenal">⚙ ${state.traps[i]}　🕸 ${state.nets[i]}<span>🎯 ${state.towers[i]}级　🔔 ${state.alarms[i] ? (state.alarmCooldowns[i] ? '冷却' : '待命') : '—'}</span></div><div class="ring-terrain">🗺 ${G.TERRAIN_DEFS[i].label} Lv.${state.terrainLevels[i]}${state.terrainLevels[i] ? ` · ${G.TERRAIN_DEFS[i].description.split('：').slice(-1)[0]}` : ' · 尚未改造'}</div></button>`;
     }).join('');
   }
   function renderResult() {
@@ -234,7 +346,7 @@
   function renderPhase() {
     const panel = $('phasePanel');
     if (state.phase === 'question') {
-      panel.innerHTML = `<div class="action-card"><div class="action-card-header"><span class="micro-tag">🧮 数学采购挑战</span><span class="chapter-tag">第 ${state.turn} 题 / 18</span></div><div class="question-inner"><div class="question-title">${escapeText(state.question.prompt)}</div><p class="answer-label">选出正确答案以获得建材</p><div class="answer-choices">${state.question.options.map((v, i) => `<button class="answer-option" type="button" data-answer="${v}" aria-label="选项${i + 1}，${v}">${v}</button>`).join('')}</div><p class="action-hint">✓ 答对：金币 +${3 + G.nightOf(state.turn)}、木材 +1；连续4题答对还能获得手电电量。</p></div></div>`;
+      panel.innerHTML = `<div class="action-card"><div class="action-card-header"><span class="micro-tag">🧮 数学防御挑战</span><span class="chapter-tag">第 ${state.turn} 题 / 18 · Level ${G.nightOf(state.turn)}</span></div><div class="question-inner"><div class="question-tags"><span class="question-chip">主题：${escapeText(state.question.theme || '守夜算术')}</span><span class="question-chip">难度 ${'★'.repeat(Math.max(1, state.question.difficulty || 1))}</span></div><div class="question-title">${escapeText(state.question.prompt)}</div><p class="answer-label">选出正确答案以获得建材。题目会随着关卡升级逐步变难。</p><div class="answer-choices">${state.question.options.map((v, i) => `<button class="answer-option" type="button" data-answer="${v}" aria-label="选项${i + 1}，${v}">${v}</button>`).join('')}</div><p class="action-hint">✓ 答对：金币 +${3 + G.nightOf(state.turn)}、木材 +1；连续4题答对还能获得手电电量。</p></div></div>`;
     } else if (state.phase === 'dice') {
       panel.innerHTML = `${renderResult()}<div class="action-card"><div class="dice-layout"><span class="micro-tag">🎲 算错了的补救机会</span><h3 style="margin-top:12px">敢不敢掷命运骰？</h3><p class="dice-description">六个面，等概率。坏运气会让狼群袭来；好手气拿到手电筒，照狼一眼，狼就成吉娃娃。</p><div class="dice-outcomes">${G.DICE_FACES.map(f => `<span class="dice-face ${f.kind}"><span>${f.face}</span> ${f.label}</span>`).join('')}</div><div class="dice-actions"><button type="button" class="primary-button" data-action="roll">🎲 掷命运骰</button><button type="button" class="secondary-button" data-action="skip">安全跳过</button></div><p class="action-hint">概率公开：灾厄 1/6，拿手电 2/6，其余 3/6。没有真金钱赌博。</p></div></div>`;
     } else if (state.phase === 'defend') {
@@ -250,6 +362,8 @@
           <div class="build-group-label">可升级自动防御 <small>每回合自动触发</small></div>
           ${actionButton('tower', '🎯', `弹弓哨塔 Lv.${state.towers[r]}/2`, '发射石子降低狼的胆量；归零逃跑', '木材 2 · 石材 1 · 金币 2', state.wood >= 2 && state.stone >= 1 && state.coins >= 2 && state.towers[r] < 2)}
           ${actionButton('alarm', '🔔', state.alarms[r] ? '警报铃已安装' : '月光警报铃', '每 3 回合吓住一只狼两轮', '木材 1 · 石材 2 · 金币 3', state.wood >= 1 && state.stone >= 2 && state.coins >= 3 && !state.alarms[r])}
+          <div class="build-group-label">地形升级 <small>每圈专属地形，最多 Lv.2</small></div>
+          ${(() => { const next = state.terrainLevels[r] + 1; const def = G.TERRAIN_DEFS[r]; const cost = def.costs[Math.max(0, Math.min(def.costs.length - 1, next - 1))]; const eligible = next <= 2 && state.wood >= (cost.wood || 0) && state.stone >= (cost.stone || 0) && state.coins >= (cost.coins || 0); const costText = next > 2 ? '已满级' : `木材 ${cost.wood || 0} · 石材 ${cost.stone || 0} · 金币 ${cost.coins || 0}`; return actionButton('terrain', '🗺️', `${def.label} Lv.${state.terrainLevels[r]}/2`, def.description, costText, eligible); })()}
           <div class="build-group-label">修筑与材料 <small>小屋的日常工程</small></div>
           ${actionButton('buyWood', '🪵', '采购 2 块木材', '用于修墙、制作各类陷阱', '金币 4 → 木材 +2', state.coins >= 4)}
           ${actionButton('buyStone', '⬡', '采购 1 块石材', '用于哨塔、夹子和警报铃', '金币 5 → 石材 +1', state.coins >= 5)}
@@ -258,6 +372,9 @@
           <div class="build-group-label">特殊道具 <small>不占工程行动</small></div>
           <button class="build-button torch-action" type="button" data-action="flash" ${state.charges > 0 && selectedWolf ? '' : 'disabled'}><b><span class="build-symbol">🔦</span>手电变吉娃娃</b><small>${selectedWolf ? `目标：狼 #${selectedWolf.id}` : '先选中一只狼'}</small><span class="cost">电量 1 · 不占建造次数</span></button>
         </div><button type="button" class="endturn-button" data-action="endturn">🌙 结束回合 · 自动防御开火 →</button><p class="attack-warning">⚠ 结束回合：先触发哨塔和警报铃，接着结算陷阱，最后才是狼的攻击。</p></div></div>`;
+    } else if (state.phase === 'interlude') {
+      const story = state.storyCard || { title: '下一关', kicker: '夜色继续。', lines: [] };
+      panel.innerHTML = `<div class="action-card story-card"><div class="action-card-header"><span class="micro-tag">📖 关卡过场</span><span class="chapter-tag">第 ${G.nightOf(state.turn)} 夜 / Level ${G.nightOf(state.turn)}</span></div><div class="dice-layout"><h3>${escapeText(story.title)}</h3><p class="story-kicker">${escapeText(story.kicker || '')}</p><div class="story-lines">${(story.lines || []).map(line => `<p>${escapeText(line)}</p>`).join('')}</div><button class="primary-button" type="button" data-action="continueStory">继续进入下一夜 →</button></div></div>`;
     } else {
       panel.innerHTML = `<div class="action-card"><div class="dice-layout"><h3>${state.phase === 'won' ? '守夜成功！' : '防线失守！'}</h3><p class="dice-description">${escapeText(state.gameEndReason)}</p><button class="primary-button" type="button" data-restart="yes">重新开始</button></div></div>`;
     }
@@ -273,7 +390,8 @@
       const label = G.getWolfName(w);
       const position = w.ring === 0 ? '森林边缘' : G.RING_NAMES[w.ring - 1];
       const ready = state.phase === 'defend' && state.charges > 0 && !dog;
-      return `<div class="wolf-card ${state.selectedWolf === w.id ? 'selected' : ''}"><div class="wolf-avatar ${dog ? 'dog' : ''}">${dog ? '🐕' : w.kind === 'heavy' ? '🐺' : '🐺'}</div><div class="wolf-details"><strong>#${w.id} ${label}</strong><small>${position} ${dog ? '· 正在逃跑' : `· 攻击 ${w.attack} · 胆量 ${w.courage}/${w.maxCourage}`}</small></div>${dog ? '<span style="color:#a7e8bc;font-size:11px">无害 ✓</span>' : `<button class="target-choose ${ready ? 'torch-target' : ''}" type="button" data-wolf="${w.id}" aria-label="选中第${w.id}只狼">${state.selectedWolf === w.id ? '已选中' : '选中'}</button>`}${ready ? `<button class="target-choose torch-target" type="button" data-directflash="${w.id}" aria-label="用手电照射第${w.id}只狼">🔦 照射</button>` : ''}</div>`;
+      const weapon = dog ? '失去战意' : G.getWolfWeapon(w, state.turn, state.mode);
+      return `<div class="wolf-card ${state.selectedWolf === w.id ? 'selected' : ''}"><div class="wolf-avatar ${dog ? 'dog' : ''}">${dog ? '🐕' : w.kind === 'heavy' ? '🐺' : '🐺'}</div><div class="wolf-details"><strong>#${w.id} ${label}</strong><small>${position} ${dog ? '· 正在逃跑' : `· 武器 ${weapon} · 攻击 ${w.attack} · 胆量 ${w.courage}/${w.maxCourage}`}</small></div>${dog ? '<span style="color:#a7e8bc;font-size:11px">无害 ✓</span>' : `<button class="target-choose ${ready ? 'torch-target' : ''}" type="button" data-wolf="${w.id}" aria-label="选中第${w.id}只狼">${state.selectedWolf === w.id ? '已选中' : '选中'}</button>`}${ready ? `<button class="target-choose torch-target" type="button" data-directflash="${w.id}" aria-label="用手电照射第${w.id}只狼">🔦 照射</button>` : ''}</div>`;
     }).join('');
   }
   function renderFeed() {
@@ -311,6 +429,8 @@
   });
   $('continueButton').addEventListener('click', continueGame);
   $('restartBtn').addEventListener('click', confirmRestart);
+  $('saveBtn').addEventListener('click', manualSave);
+  $('loadBtn').addEventListener('click', manualLoad);
   $('helpBtn').addEventListener('click', () => { $('helpOverlay').classList.add('visible'); $('helpOverlay').setAttribute('aria-hidden', 'false'); });
   $('closeHelp').addEventListener('click', closeHelp);
   $('okHelp').addEventListener('click', closeHelp);
@@ -463,6 +583,38 @@
     ellipse(505, 377, 413, 213, '#f3e7c4');
     ctx.restore();
   }
+
+  function drawStageProgress(t) {
+    const stage = G.nightOf(state.turn);
+    if (stage >= 2) {
+      ctx.save();
+      ctx.globalAlpha = visualStyle === 'drama' ? 0.55 : 0.65;
+      // trenches and rocks
+      for (let i = 0; i < 5; i++) {
+        const x = 150 + i * 165 + Math.sin(t / 1500 + i) * 8;
+        const y = 360 + (i % 2) * 28;
+        ellipse(x, y, 34, 10, visualStyle === 'drama' ? '#30261f' : '#384538');
+        polygon([[x-22,y-6],[x-8,y-18],[x+11,y-14],[x+25,y-4],[x+10,y+4],[x-14,y+3]], visualStyle === 'drama' ? '#5f5650' : '#63786a', '#273035', 1);
+      }
+      ctx.restore();
+    }
+    if (stage >= 3) {
+      ctx.save();
+      const left = HOME_X - 165, right = HOME_X + 130, top = HOME_Y - 92;
+      rounded(left, top, 42, 128, 3, visualStyle === 'drama' ? '#6a5b52' : '#8a8c7a', '#273038', 3);
+      rounded(right, top + 6, 42, 122, 3, visualStyle === 'drama' ? '#665a54' : '#878a79', '#273038', 3);
+      for (const tx of [left + 5, right + 5]) {
+        for (let i = 0; i < 4; i++) rounded(tx, top + 14 + i * 26, 32, 10, 1, visualStyle === 'drama' ? '#7e6d63' : '#9b9f8b');
+      }
+      ctx.strokeStyle = '#745a43'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(left + 20, top); ctx.lineTo(left + 20, top - 28); ctx.moveTo(right + 20, top + 6); ctx.lineTo(right + 20, top - 20); ctx.stroke();
+      polygon([[left+20,top-28],[left+58,top-18],[left+20,top-8]], visualStyle === 'drama' ? '#b86161' : '#d06f55');
+      polygon([[right+20,top-20],[right+55,top-8],[right+20,top+4]], visualStyle === 'drama' ? '#b58f4c' : '#e0bb64');
+      label('堡垒化防线', HOME_X, HOME_Y - 148, visualStyle === 'drama' ? '#dfc3a9' : '#ebddb8', 'center', 14);
+      ctx.restore();
+    }
+  }
+
   function drawRing(i, t) {
     const [rx, ry] = RING_RADII[i];
     const hp = state.walls[i], max = G.MAX_WALLS[i];
@@ -658,6 +810,7 @@
     rounded(-23,-76,46,21,6,dog?'#57634b':'#4e3741',dog?'#a3c18e':'#b68a79',1);
     label(dog?'汪':String(wolf.id),0,-65,'#ffe2b4','center',15);
     if(dog)label('退！',0,52,'#d4e9bb','center',14);
+    if (wolf.kind !== 'dog' && wolf.weaponIcon) { rounded(16,-68,22,18,6,'#2d3346','#b1988a',1); label(wolf.weaponIcon,27,-55,'#ffe4bb','center',12); }
     ctx.restore();
   }
   function drawWolf(wolf, t) {
@@ -696,6 +849,7 @@
     // Character badge, kept readable in reduced mobile canvas.
     rounded(-18,-77,36,21,7,dog?'#2b715b':'#26354b',dog?'#87cba2':'#7d8fa8',1);
     label(dog?'汪':String(wolf.id),0,-66,dog?'#e9ffe6':'#ffe7ad','center',14);
+    if (!dog && wolf.weaponIcon) { rounded(14,-61,22,18,6,'#243547','#9aa8bb',1); label(wolf.weaponIcon,25,-48,'#ffdfae','center',12); }
     if (dog) {
       label('← 退回外圈',0,48,'#c6ffbd','center',11);
     }
@@ -810,12 +964,38 @@
       ellipse(target.x+Math.cos(a)*rad,target.y+Math.sin(a)*rad*.6,3.5*intensity,3.5*intensity,`rgba(255,243,187,${intensity})`);
     }
   }
+
+  function applyPs1Post(t) {
+    psxCtx.imageSmoothingEnabled = true;
+    psxCtx.clearRect(0, 0, psxCanvas.width, psxCanvas.height);
+    psxCtx.drawImage(canvas, 0, 0, psxCanvas.width, psxCanvas.height);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(psxCanvas, 0, 0, W, H);
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = .08;
+    for (let y = 0; y < H; y += 4) ctx.fillRect(0, y, W, 1);
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = .09;
+    for (let i = 0; i < 120; i++) {
+      const x = ((i * 83.17 + t * .06) % W);
+      const y = ((i * 41.31 + t * .03) % H);
+      ctx.fillStyle = i % 3 === 0 ? '#ffd29b' : i % 3 === 1 ? '#8fd0ff' : '#e5a4d9';
+      ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
+    }
+    ctx.restore();
+  }
+
   function draw(t) {
     if (!canvas.isConnected) return;
     resizeCanvas();
     ctx.setTransform(canvas.width / W,0,0,canvas.height / H,0,0);
     ctx.clearRect(0,0,W,H);
     background(t);
+    drawStageProgress(t);
     for(let i=0;i<3;i++) drawRing(i,t);
     drawDefenses(t);
     drawCabin(t);
@@ -835,18 +1015,22 @@
         ellipse(bx,by,1.2,1.2,'#fbf0db');
       }
       ctx.restore();
+      applyPs1Post(t);
     }
     screenshotFrame++;
     if (drawing) requestAnimationFrame(draw);
   }
 
   if (stored && stored.phase !== 'won' && stored.phase !== 'lost') $('continueButton').classList.remove('hidden');
+  updateLoadButton();
   document.querySelectorAll('[data-style]').forEach(button => {
     const selected=button.dataset.style===visualStyle;
     button.setAttribute('aria-pressed',String(selected));
     button.classList.toggle('active',selected);
   });
+  resetCountdown(true);
   render();
+  startTimerLoop();
   requestAnimationFrame(draw);
   window.WolfMathDebug = {
     getState: () => JSON.parse(JSON.stringify(state)),

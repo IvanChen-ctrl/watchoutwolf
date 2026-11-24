@@ -1,11 +1,14 @@
-# WatchOutWolf v1.2.0 · 双画风与防御体系
+# WatchOutWolf v1.5.0 — Math Defense & Drama Mode
 
-- 🧮 经典数学堡垒 / 🎬 丑狼短剧：开场与战斗画面均可切换，存档不丢失。
-- 🎬 独立午夜木屋、丑狼脸部、森林雾、暖色灯光、电影边框与唯一一条字幕。短剧人物设定延续，但不是原 3D 模型导入。
-- ⚙ 弹簧夹：保留并明确为退后层级的单次防御。
-- 🕸 冰淇淋黏网：新增单次两轮阻滞。
-- 🎯 弹弓哨塔：每圈可升级到 2 级；每级每回合使狼胆量 −1，归零无伤劝退。
-- 🔔 月光警报铃：每圈上限 1 座；每 3 回合打断一只狼两轮攻击。
-- 🔦 手电保留：变吉娃娃后立即后退外面一层；不占工程行动。
-- 新增各类武器的 Canvas 特效与规则测试；旧版本本地存档会自动升级。
-- Android APK：debug `com.moonfence.wolfmath`，versionCode 3，versionName 1.2.0。
+- 双画风：经典堡垒 / 丑狼短剧 PS1 颗粒感画面，游戏中即时切换
+- 三夜十八回合，从外婆家到壕沟、堡垒塔楼逐级强化
+- 11+ 数学题型，按夜晚提升计算难度；答错可选择六面命运骰
+- 弹簧陷阱、冰淇淋黏网、弹弓哨塔、月光警报铃及地形升级
+- 敌狼武器随关卡升级；手电筒将狼变吉娃娃并退回外一层
+- 修复两处高难度数学题产生不合理负数的边界情况
+- 修复旧版存档迁移意外推进随机数序列的问题
+- 修复吉娃娃存档迁移后攻击值可能复原的问题
+- Android package: `com.moonfence.wolfmath`, versionName 1.5.0, versionCode 5
+- CI must run rule-engine tests, package and APK-integrity verification before download
+
+请注意：APK 使用 Android Debug 签名，适合个人侧载测试，非商店发布签名。

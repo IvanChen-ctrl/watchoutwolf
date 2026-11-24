@@ -32,6 +32,10 @@ def run():
         assert page.locator('#introOverlay.visible').count() == 1
         page.locator('[data-mode="easy"]').click()
         save = lambda: page.evaluate("JSON.parse(localStorage.getItem('wolf-math-defense-save-v1'))")
+        def normalized(state):
+            state = dict(state)
+            state.pop('timer', None)
+            return state
         assert page.locator('.answer-option').count() == 3
         ans = save()['question']['answer']
         page.locator(f'[data-answer]:not([data-answer="{ans}"])').first.click()
@@ -74,19 +78,39 @@ def run():
         page.locator('.style-toolbar button[data-style="drama"]').click()
         assert page.evaluate('document.body.dataset.style') == 'drama'
         assert page.evaluate('window.WolfMathDebug.getVisualStyle()') == 'drama'
-        assert save() == frozen
+        assert normalized(save()) == normalized(frozen)
         assert page.locator('.scene-caption').is_visible()
         assert page.locator('.style-toolbar button[data-style="drama"]').get_attribute('aria-pressed') == 'true'
         page.wait_for_timeout(210)
         dims = page.evaluate('({scroll:document.documentElement.scrollWidth,width:innerWidth})')
         assert dims['scroll'] <= dims['width'] + 1, dims
-        page.screenshot(path=str(ROOT / 'qa_drama_mobile_v12.png'))
+        page.screenshot(path=str(ROOT / 'qa_drama_mobile_v14.png'))
         page.locator('.style-toolbar button[data-style="classic"]').click()
-        assert save() == frozen
+        assert normalized(save()) == normalized(frozen)
         assert page.evaluate('document.body.dataset.style') == 'classic'
         assert not page.locator('.scene-caption').is_visible()
-        page.screenshot(path=str(ROOT / 'qa_classic_mobile_v12.png'))
+        page.screenshot(path=str(ROOT / 'qa_classic_mobile_v14.png'))
         print('PASS dual-style swap retains same state, progress, and 320px viewport')
+
+        # Progression scene and math challenge remain readable in both mobile art styles.
+        defense_snapshot = save()
+        page.evaluate('''() => {
+            const s=window.WolfMathDebug.getState();
+            s.turn=13; s.night=3; s.phase='question';
+            s.question=window.WolfMathEngine.makeQuestion(s);
+            s.wolves.forEach(w => { w.weapon='铁爪套';w.weaponIcon='⚔️';w.attack=3; });
+            window.WolfMathDebug.setState(s);
+        }''')
+        assert page.locator('.question-chip').count() >= 2
+        assert 'Level 3' in page.locator('.question-inner').locator('xpath=..').inner_text() or '★★★' in page.locator('.question-chip').all_inner_texts()[-1]
+        page.locator('.style-toolbar button[data-style="drama"]').click()
+        assert page.evaluate('document.body.dataset.style') == 'drama'
+        assert not errors, errors
+        page.screenshot(path=str(ROOT / 'qa_fortress_mobile_v15.png'))
+        page.locator('.style-toolbar button[data-style="classic"]').click()
+        assert not errors, errors
+        print('PASS level-3 fortress, 3-star math difficulty and drama-style drawing')
+        page.evaluate('(snapshot) => window.WolfMathDebug.setState(snapshot)', defense_snapshot)
 
         # New trap/weapon buttons have real, capped, resource-checked effects.
         page.evaluate('''() => {

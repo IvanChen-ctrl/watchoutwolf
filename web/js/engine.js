@@ -26,6 +26,32 @@
     { face: 6, label: '超级手电筒', detail: '手电电量+2，今晚的狼要改名了。', kind: 'jackpot' }
   ];
 
+  const TERRAIN_DEFS = Object.freeze([
+    { key: 'briar', label: '荆棘坡地', costs: [{ wood: 1, coins: 2 }, { wood: 2, stone: 1, coins: 2 }], description: '外圈地形：狼在外圈先被扎得心虚；2级再额外绊住一轮。' },
+    { key: 'mud', label: '泥泞壕沟', costs: [{ wood: 1, stone: 1, coins: 1 }, { wood: 2, stone: 2, coins: 1 }], description: '中圈地形：泥地吸收冲击，狼在中圈造成的伤害降低。' },
+    { key: 'highground', label: '高地月台', costs: [{ wood: 1, stone: 2, coins: 2 }, { wood: 2, stone: 2, coins: 3 }], description: '内圈地形：提升内圈自动防御，哨塔补射、警铃更快冷却。' }
+  ]);
+  const INTERLUDE_STORIES = Object.freeze({
+    2: {
+      title: '第二关 · 院子与厨房',
+      kicker: '第一夜守住了，狼却开始试探侧门。',
+      lines: [
+        '天亮后，女儿把剩下的冰淇淋和麻绳留下，说它们至少能做成黏网。',
+        '丑娘终于从床底探出头：外面的狼太吵，她决定拿出一点冷幽默式报恩。',
+        '第二夜开始，狼会更会绕路。把中圈守好，别让厨房先沦陷。'
+      ]
+    },
+    3: {
+      title: '第三关 · PS1 惊悚夜',
+      kicker: '最后一夜像旧主机里的粗糙噩梦。',
+      lines: [
+        '夜色突然像老电视机一样起了颗粒，整个院子仿佛掉进一张低多边形贴图。',
+        '孙子终于把掌机放下：这回不是开玩笑，连狼王都快从像素缝里钻出来了。',
+        '第三夜会更猛烈。利用高地月台、哨塔和警铃，把结局撑到黎明。'
+      ]
+    }
+  });
+
   function rollRandom(state) {
     let x = state.seed >>> 0;
     x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
@@ -50,63 +76,166 @@
   function clamp(value, lo, hi) { return Math.max(lo, Math.min(hi, value)); }
   function nightOf(turn) { return Math.min(3, 1 + Math.floor((turn - 1) / PER_NIGHT)); }
 
-  function makeQuestion(state) {
-    const night = nightOf(state.turn);
-    const easy = state.mode === 'easy';
-    const maxTemplate = easy ? 4 : (night === 1 ? 5 : night === 2 ? 7 : 9);
-    const template = randInt(state, 0, maxTemplate);
-    let prompt, answer, hint;
-    const a = randInt(state, 2, easy ? 7 : 8 + night * 2);
-    const b = randInt(state, 2, easy ? 6 : 5 + night * 2);
-    const c = randInt(state, 1, 4);
-    if (template === 0) {
-      prompt = `外婆买了 ${a} 块木板，又买了 ${b} 块。仓库现在有几块木板？`;
-      answer = a + b; hint = `${a} + ${b} = ${answer}`;
-    } else if (template === 1) {
-      const total = a + b + c;
-      prompt = `守夜人带来 ${total} 枚金币，买钉子花了 ${b} 枚，还剩多少？`;
-      answer = total - b; hint = `${total} − ${b} = ${answer}`;
-    } else if (template === 2) {
-      prompt = `一捆木板要 ${a} 枚金币，买 ${c + 1} 捆一共需要多少？`;
-      answer = a * (c + 1); hint = `${a} × ${c + 1} = ${answer}`;
-    } else if (template === 3) {
-      const t = a * (c + 1);
-      prompt = `${t} 块木板平均分给 ${c + 1} 道防线，每道能分到几块？`;
-      answer = a; hint = `${t} ÷ ${c + 1} = ${answer}`;
-    } else if (template === 4) {
-      prompt = `修外墙要 ${a} 块木板，中墙要 ${b} 块，手头有 ${a + b - c} 块。还缺几块？`;
-      answer = c; hint = `${a} + ${b} − ${a + b - c} = ${answer}`;
-    } else if (template === 5) {
-      prompt = `商店有 ${a} 组木料，每组 ${b} 块，另外赠送 ${c} 块。共有几块？`;
-      answer = a * b + c; hint = `${a} × ${b} + ${c} = ${answer}`;
-    } else if (template === 6) {
-      const p = (a + 2) * 2;
-      prompt = `两道门每道要 ${a + 2} 枚螺丝，已经准备了 ${c} 枚。还需多少枚？`;
-      answer = p - c; hint = `2 × ${a + 2} − ${c} = ${answer}`;
-    } else if (template === 7) {
-      const full = (a + b) * 2;
-      prompt = `每组木料 ${a + b} 元，买两组可减 ${c} 元。实际要付多少？`;
-      answer = full - c; hint = `2 × ${a + b} − ${c} = ${answer}`;
-    } else if (template === 8) {
-      const unit = c + 2;
-      prompt = `一共 ${a * unit} 块石头，每道防线分 ${unit} 块，能修几道？`;
-      answer = a; hint = `${a * unit} ÷ ${unit} = ${answer}`;
-    } else {
-      const every = a + 3;
-      const spent = Math.min(b, every * 2 - 1);
-      prompt = `两天各存 ${every} 枚金币，买陷阱花 ${spent} 枚，剩下多少？`;
-      answer = every * 2 - spent; hint = `2 × ${every} − ${spent} = ${answer}`;
+  function weaponProfile(kind, night, mode) {
+    const hard = mode === 'nightmare';
+    if (kind === 'dog') return { name: '夹尾巴', attackBonus: 0, icon: '🐕' };
+    if (night <= 1) {
+      if (kind === 'heavy') return { name: '木桩肩撞', attackBonus: 0, icon: '🪵' };
+      if (kind === 'swift') return { name: '扑咬短爪', attackBonus: 0, icon: '🗡️' };
+      if (kind === 'sneak') return { name: '地洞铁铲', attackBonus: 0, icon: '⛏️' };
+      return { name: '利爪', attackBonus: 0, icon: '🦴' };
     }
+    if (night === 2) {
+      if (kind === 'heavy') return { name: '包铁木槌', attackBonus: 1, icon: '🔨' };
+      if (kind === 'swift') return { name: '钩镰短刃', attackBonus: hard ? 1 : 0, icon: '🗡️' };
+      if (kind === 'sneak') return { name: '撬棍', attackBonus: 1, icon: '🪛' };
+      return { name: '骨棒', attackBonus: hard ? 1 : 0, icon: '🦴' };
+    }
+    if (kind === 'heavy') return { name: '攻城槌', attackBonus: 1, icon: '🪵' };
+    if (kind === 'swift') return { name: '连弩', attackBonus: 1, icon: '🏹' };
+    if (kind === 'sneak') return { name: '火油瓶', attackBonus: 1, icon: '🔥' };
+    return { name: '铁爪套', attackBonus: 1, icon: '⚔️' };
+  }
+
+  function upgradeWolfLoadout(state, wolf) {
+    const profile = weaponProfile(wolf.kind, nightOf(state.turn), state.mode);
+    const baseAttack = wolf.kind === 'heavy' ? 3 : 2;
+    wolf.weapon = profile.name;
+    wolf.weaponIcon = profile.icon;
+    wolf.attack = wolf.kind === 'dog' ? 0 : baseAttack + profile.attackBonus;
+    return wolf;
+  }
+
+  function makeOptions(state, answer, spread) {
     const wrong = new Set();
     let tries = 0;
-    while (wrong.size < 2 && tries++ < 60) {
-      const d = randInt(state, 1, 5 + night * 2) * (rollRandom(state) < 0.5 ? -1 : 1);
+    while (wrong.size < 2 && tries++ < 80) {
+      const d = randInt(state, 1, spread) * (rollRandom(state) < 0.5 ? -1 : 1);
       const candidate = answer + d;
       if (candidate >= 0 && candidate !== answer) wrong.add(candidate);
     }
-    let candidate = answer + 1;
-    while (wrong.size < 2) { if (!wrong.has(candidate)) wrong.add(candidate); candidate++; }
-    return { prompt, answer, hint, options: shuffled(state, [answer, ...wrong]), id: state.turn };
+    let candidate = Math.max(0, answer + 1);
+    while (wrong.size < 2) { if (!wrong.has(candidate) && candidate !== answer) wrong.add(candidate); candidate++; }
+    return shuffled(state, [answer, ...wrong]);
+  }
+
+  function questionPack(state, tier) {
+    const a = randInt(state, 2 + tier, 7 + tier * 3);
+    const b = randInt(state, 2, 5 + tier * 3);
+    const c = randInt(state, 1, 4 + tier);
+    const d = randInt(state, 2, 6 + tier * 2);
+    const secondWaveLess = Math.min(c, a - 1); // A wave never contains negative wolves.
+    const bank = [
+      () => ({
+        theme: '木板补给', difficulty: tier,
+        prompt: `外圈要补 ${a} 块木板，中圈要补 ${b} 块木板，仓库里另有备用 ${c} 块。一共要准备多少块木板？`,
+        answer: a + b + c, hint: `${a} + ${b} + ${c}`
+      }),
+      () => ({
+        theme: '陷阱采购', difficulty: tier,
+        prompt: `一个弹簧夹要 ${a} 枚金币，冰淇淋黏网要 ${b} 枚金币。各买 1 个，再多买 ${c} 枚钉子，共要多少金币？`,
+        answer: a + b + c, hint: `${a} + ${b} + ${c}`
+      }),
+      () => ({
+        theme: '石墙修筑', difficulty: tier,
+        prompt: `修一段石墙要 ${a} 块石头，共修 ${c + 1} 段，还额外用掉 ${b} 块石头堵缝。一共用了多少块石头？`,
+        answer: a * (c + 1) + b, hint: `${a} × ${c + 1} + ${b}`
+      }),
+      () => ({
+        theme: '哨塔分配', difficulty: tier,
+        prompt: `仓库有 ${a * (c + 1)} 颗石子，平均分给 ${c + 1} 座弹弓哨塔，每座可分到多少颗？`,
+        answer: a, hint: `${a * (c + 1)} ÷ ${c + 1}`
+      }),
+      () => ({
+        theme: '警铃电池', difficulty: tier,
+        prompt: `警报铃原有 ${a + b} 格电量，今夜用掉 ${b} 格，又临时充入 ${c} 格，现在还有多少格？`,
+        answer: a + c, hint: `${a + b} − ${b} + ${c}`
+      }),
+      () => ({
+        theme: '狼群波次', difficulty: tier,
+        prompt: `第一波来了 ${a} 只狼，第二波比第一波少 ${secondWaveLess} 只，第三波又来了 ${b} 只。一共来了多少只狼？`,
+        answer: a + (a - secondWaveLess) + b, hint: `${a} + (${a} − ${secondWaveLess}) + ${b}`
+      }),
+      () => ({
+        theme: '围栏周长', difficulty: tier,
+        prompt: `一个长方形训练围栏长 ${a + 2} 米、宽 ${c + 2} 米。围一圈需要多少米围栏？`,
+        answer: 2 * ((a + 2) + (c + 2)), hint: `2 × (${a + 2} + ${c + 2})`
+      }),
+      () => ({
+        theme: '折扣采购', difficulty: tier,
+        prompt: `木料每组 ${a + b} 元，买 2 组可减 ${c} 元，再加运费 ${d} 元，最后付多少？`,
+        answer: 2 * (a + b) - c + d, hint: `2 × (${a + b}) − ${c} + ${d}`
+      }),
+      () => ({
+        theme: '壕沟分层', difficulty: tier,
+        prompt: `泥泞壕沟要挖 ${a} 层，每层放 ${b} 块石板，再额外铺 ${c} 块防滑板，一共需要多少块材料？`,
+        answer: a * b + c, hint: `${a} × ${b} + ${c}`
+      }),
+      () => ({
+        theme: '堡垒台阶', difficulty: tier,
+        prompt: `堡垒有 3 层台阶，每层各放 ${a} 个沙袋，另外门口再放 ${b + c} 个。总共放了多少个沙袋？`,
+        answer: 3 * a + (b + c), hint: `3 × ${a} + (${b} + ${c})`
+      }),
+      () => ({
+        theme: '攻城反推', difficulty: tier,
+        prompt: `狼带来一些包铁木槌，如果每队分 ${c + 2} 把，一共分给 ${a} 队，正好分完。总共有多少把？`,
+        answer: a * (c + 2), hint: `${a} × ${c + 2}`
+      })
+    ];
+    if (tier >= 2) {
+      bank.push(
+        () => ({
+          theme: '两步预算', difficulty: tier,
+          prompt: `修一段外墙要 ${a} 块木板，修一段中墙要 ${b} 块石板。若外墙修 2 段、中墙修 1 段，再额外备用 ${c} 块材料，一共需要多少块？`,
+          answer: 2 * a + b + c, hint: `2 × ${a} + ${b} + ${c}`
+        }),
+        () => ({
+          theme: '分批补给', difficulty: tier,
+          prompt: `第一车送来 ${a} 箱木料，每箱 ${c + 1} 块；第二车直接送来 ${b} 块。两车一共送来多少块木料？`,
+          answer: a * (c + 1) + b, hint: `${a} × ${c + 1} + ${b}`
+        })
+      );
+    }
+    if (tier >= 3) {
+      bank.push(
+        () => ({
+          theme: '堡垒总工程', difficulty: tier,
+          prompt: `修堡垒前墙要 ${a} 组砖，每组 ${b} 块；侧墙又要 ${c} 组，每组 ${d} 块。若门楼额外再用 ${a} 块砖，一共需要多少块砖？`,
+          answer: a * b + c * d + a, hint: `${a} × ${b} + ${c} × ${d} + ${a}`
+        }),
+        () => ({
+          theme: '复杂补差', difficulty: tier,
+          prompt: `仓库目标是准备 ${3 * a + 2 * b + c} 块木板。现在已有 ${b + c} 块，又新买了 ${d} 块。还差多少块？`,
+          answer: 3 * a + b - d, hint: `${3 * a + 2 * b + c} − (${b} + ${c}) − ${d}`
+        }),
+        () => ({
+          theme: '多层哨塔', difficulty: tier,
+          prompt: `每座高地哨塔有 ${a} 层，每层放 ${c} 个石袋；这样的哨塔建了 ${b} 座。总共用了多少个石袋？`,
+          answer: a * c * b, hint: `${a} × ${c} × ${b}`
+        })
+      );
+    }
+    return bank;
+  }
+
+  function makeQuestion(state) {
+    const night = nightOf(state.turn);
+    const tier = state.mode === 'nightmare' ? Math.min(3, night + (night > 1 ? 1 : 0)) : night;
+    const bank = questionPack(state, tier);
+    const chosen = bank[randInt(state, 0, bank.length - 1)]();
+    const answer = Math.trunc(chosen.answer);
+    if (answer < 0 || !Number.isSafeInteger(answer)) throw new Error('Invalid math question: ' + chosen.theme);
+    const hint = `${chosen.hint} = ${answer}`;
+    return {
+      prompt: chosen.prompt,
+      answer,
+      hint,
+      options: makeOptions(state, answer, 5 + night * 3 + tier),
+      id: state.turn,
+      theme: chosen.theme,
+      difficulty: tier,
+      chapter: night
+    };
   }
 
   function addWolf(state, fixedKind) {
@@ -124,7 +253,8 @@
     const kind = fixedKind || (ring > 1 ? 'sneak' : night >= 3 && variant < .22 ? 'heavy' : night >= 2 && variant < .38 ? 'swift' : 'wolf');
     const angle = -Math.PI * .84 + rollRandom(state) * Math.PI * 1.65;
     const courage = kind === 'heavy' ? 5 : kind === 'swift' ? 2 : kind === 'sneak' ? 3 : 3;
-    const wolf = { id: ++state.nextWolfId, kind, ring, angle, attack: kind === 'heavy' ? 3 : 2, dogTurns: 0, stunned: 0, courage, maxCourage: courage };
+    const wolf = { id: ++state.nextWolfId, kind, ring, angle, attack: kind === 'heavy' ? 3 : 2, dogTurns: 0, stunned: 0, courage, maxCourage: courage, weapon: '', weaponIcon: '' };
+    upgradeWolfLoadout(state, wolf);
     state.wolves.push(wolf);
     if (ring > 1) log(state, `警报！钻地狼${wolf.id}绕过外圈，直接潜入第${ring}圈！`, 'bad');
     return wolf;
@@ -133,15 +263,18 @@
   function newGame(mode, seed) {
     const chosen = mode === 'nightmare' ? 'nightmare' : 'easy';
     const state = {
-      version: 2, mode: chosen, seed: (Number(seed) >>> 0) || (Date.now() >>> 0) || 2817,
+      version: 5, mode: chosen, seed: (Number(seed) >>> 0) || (Date.now() >>> 0) || 2817,
       turn: 1, night: 1, phase: 'question', maxTurns: TOTAL_TURNS,
       house: chosen === 'nightmare' ? 12 : 15, maxHouse: 15, coins: 4, wood: 3, stone: 0, charges: 0,
       walls: chosen === 'nightmare' ? [6, 5, 4] : [7, 6, 5],
       traps: [0, 0, 0], nets: [0, 0, 0], towers: [0, 0, 0], alarms: [0, 0, 0], alarmCooldowns: [0, 0, 0],
-      defenseStats: { springs: 0, nets: 0, shots: 0, scared: 0, alarms: 0 },
+      terrainLevels: [0, 0, 0],
+      defenseStats: { springs: 0, nets: 0, shots: 0, scared: 0, alarms: 0, terrain: 0 },
       actions: 2, maxActions: 2,
       selectedRing: 0, selectedWolf: null, streak: 0, correct: 0, wrong: 0,
       score: 0, logId: 0, nextWolfId: 0, wolves: [], feed: [], lastDice: null,
+      storyCard: null, chapter: 1,
+      timer: { phase: 'question', secondsLeft: 35 },
       lastResult: null, gameEndReason: ''
     };
     state.question = makeQuestion(state);
@@ -152,25 +285,71 @@
 
   // Previous builds stored version 1. Upgrade in place without resetting progress or the RNG seed.
   function migrateSave(state) {
-    if (!state || ![1, 2].includes(state.version) || !Array.isArray(state.walls) ||
+    if (!state || ![1, 2, 3, 4, 5].includes(state.version) || !Array.isArray(state.walls) ||
         state.walls.length !== 3 || !Array.isArray(state.wolves) || !state.question) return null;
     for (const [key, maximum] of Object.entries(MAX_DEFENSE)) {
       if (!Array.isArray(state[key]) || state[key].length !== 3) state[key] = [0, 0, 0];
       state[key] = state[key].map(v => clamp(Number.isFinite(v) ? Math.trunc(v) : 0, 0, maximum));
     }
     if (!Array.isArray(state.alarmCooldowns) || state.alarmCooldowns.length !== 3) state.alarmCooldowns = [0, 0, 0];
+    if (!Array.isArray(state.terrainLevels) || state.terrainLevels.length !== 3) state.terrainLevels = [0, 0, 0];
+    state.terrainLevels = state.terrainLevels.map(v => clamp(Number.isFinite(v) ? Math.trunc(v) : 0, 0, 2));
     if (!state.defenseStats || typeof state.defenseStats !== 'object') state.defenseStats = {};
-    for (const key of ['springs','nets','shots','scared','alarms']) {
+    for (const key of ['springs','nets','shots','scared','alarms','terrain']) {
       if (!Number.isFinite(state.defenseStats[key])) state.defenseStats[key] = 0;
     }
+    if (!state.timer || typeof state.timer !== 'object') state.timer = { phase: state.phase || 'question', secondsLeft: 35 };
+    if (!Number.isFinite(state.timer.secondsLeft)) state.timer.secondsLeft = 35;
+    if (!Number.isFinite(state.chapter)) state.chapter = nightOf(state.turn || 1);
+    if (!('storyCard' in state)) state.storyCard = null;
     for (const wolf of state.wolves) {
       const base = wolf.kind === 'heavy' ? 5 : wolf.kind === 'swift' ? 2 : 3;
       if (!Number.isFinite(wolf.maxCourage)) wolf.maxCourage = base;
       if (!Number.isFinite(wolf.courage)) wolf.courage = wolf.kind === 'dog' ? 0 : base;
       if (!Number.isFinite(wolf.stunned)) wolf.stunned = 0;
+      upgradeWolfLoadout(state, wolf);
     }
-    state.version = 2;
+    // Old saves must keep their RNG seed and existing question intact.
+    if (!state.question.theme) state.question.theme = '旧版守夜算术';
+    if (!state.question.chapter) state.question.chapter = nightOf(state.turn);
+    if (!state.question.difficulty) state.question.difficulty = state.mode === 'nightmare'
+      ? Math.min(3, state.question.chapter + (state.question.chapter > 1 ? 1 : 0)) : state.question.chapter;
+    state.version = 5;
     return state;
+  }
+
+
+  function setStoryPhase(state, chapter) {
+    const story = INTERLUDE_STORIES[chapter];
+    if (!story) return false;
+    state.chapter = chapter;
+    state.storyCard = JSON.parse(JSON.stringify(story));
+    state.phase = 'interlude';
+    state.timer = { phase: 'interlude', secondsLeft: 0 };
+    return true;
+  }
+
+  function continueStory(state) {
+    if (state.phase !== 'interlude') return { ok: false, message: '当前没有过场剧情。' };
+    state.phase = 'question';
+    state.storyCard = null;
+    state.timer = { phase: 'question', secondsLeft: 35 };
+    log(state, `进入${['第一关','第二关','第三关'][nightOf(state.turn) - 1] || '下一关'}。`, 'story');
+    return { ok: true };
+  }
+
+  function canAfford(state, cost) {
+    return (!cost.wood || state.wood >= cost.wood) && (!cost.stone || state.stone >= cost.stone) && (!cost.coins || state.coins >= cost.coins);
+  }
+
+  function spendCost(state, cost) {
+    state.wood -= cost.wood || 0;
+    state.stone -= cost.stone || 0;
+    state.coins -= cost.coins || 0;
+  }
+
+  function terrainLabel(index, level) {
+    return `${TERRAIN_DEFS[index].label} Lv.${level}`;
   }
 
   function failIfNeeded(state) {
@@ -290,6 +469,17 @@
       state.wood--; state.stone -= 2; state.coins -= 3; state.alarms[r] = 1;
       state.alarmCooldowns[r] = 0;
       log(state, `${RING_NAMES[r]}装上月光警报铃，每隔3回合吓住一只狼。`, 'good');
+    } else if (key === 'terrain') {
+      const nextLevel = state.terrainLevels[r] + 1;
+      if (nextLevel > 2) return { ok: false, message: `${TERRAIN_DEFS[r].label}已经升满2级。` };
+      const cost = TERRAIN_DEFS[r].costs[nextLevel - 1];
+      if (!canAfford(state, cost)) {
+        return { ok: false, message: `${terrainLabel(r, nextLevel)} 需要${cost.wood || 0}木材/${cost.stone || 0}石材/${cost.coins || 0}金币。` };
+      }
+      spendCost(state, cost);
+      state.terrainLevels[r] = nextLevel;
+      state.score += 15 * nextLevel;
+      log(state, `${RING_NAMES[r]}完成地形改造：${terrainLabel(r, nextLevel)}。`, 'good');
     } else return { ok: false, message: '未知工程行动。' };
     state.actions--;
     return { ok: true };
@@ -304,6 +494,8 @@
     state.charges--;
     const from = wolf.ring;
     wolf.kind = 'dog';
+    wolf.weapon = '夹尾巴';
+    wolf.weaponIcon = '🐕';
     wolf.ring = Math.max(0, from - 1);
     wolf.attack = 0;
     wolf.courage = 0;
@@ -320,11 +512,12 @@
   function endTurn(state) {
     if (state.phase !== 'defend') return { ok: false, message: '目前不能结束回合。' };
     const event = { attacked: [], retreats: [], damageHouse: 0, spawned: [], dawn: false, ended: false,
-      projectiles: [], netted: [], trapped: [], alarms: [], repelled: [] };
+      projectiles: [], netted: [], trapped: [], alarms: [], repelled: [], terrain: [] };
     // Permanent, non-lethal defenses act before wolf attacks. Targeting is deterministic.
     const repelled = new Set();
     for (let i = 0; i < 3; i++) {
-      for (let shot = 0; shot < state.towers[i]; shot++) {
+      const bonusShots = i === 2 ? state.terrainLevels[2] : 0;
+      for (let shot = 0; shot < state.towers[i] + bonusShots; shot++) {
         const candidates = state.wolves.filter(w => w.kind !== 'dog' && w.ring === i + 1 && !repelled.has(w.id))
           .sort((a,b) => b.attack - a.attack || a.courage - b.courage || a.id - b.id);
         if (!candidates.length) break;
@@ -348,13 +541,22 @@
         !repelled.has(w.id) && w.stunned <= 0).sort((a,b) => b.attack - a.attack || a.id - b.id)[0];
       if (!victim) continue;
       victim.stunned = 2;
-      state.alarmCooldowns[i] = 3;
+      state.alarmCooldowns[i] = i === 2 && state.terrainLevels[2] > 0 ? Math.max(1, 3 - state.terrainLevels[2]) : 3;
       state.defenseStats.alarms++;
       event.alarms.push(victim.id);
       log(state, `月光警报铃轰然响起！狼${victim.id}愣在原地，漏掉两次攻击。`, 'good');
     }
     const survivors = [];
     for (const wolf of state.wolves) {
+      if (wolf.kind !== 'dog' && wolf.ring === 1 && state.terrainLevels[0] > 0) {
+        const beforeCourage = wolf.courage;
+        wolf.courage = Math.max(0, wolf.courage - 1);
+        if (wolf.courage !== beforeCourage) {
+          state.defenseStats.terrain++;
+          event.terrain.push({ type: 'briar', wolfId: wolf.id, ring: 0, level: state.terrainLevels[0] });
+        }
+        if (state.terrainLevels[0] > 1 && wolf.stunned <= 0) wolf.stunned = 1;
+      }
       if (repelled.has(wolf.id)) continue;
       if (wolf.kind === 'dog') {
         wolf.dogTurns--;
@@ -386,8 +588,10 @@
         event.netted.push(wolf.id);
         log(state, `狼${wolf.id}被冰淇淋黏网黏住：今天不拆家，明天也休息。`, 'good');
       } else if (state.walls[wallIndex] > 0) {
-        const actual = Math.min(wolf.attack, state.walls[wallIndex]);
-        state.walls[wallIndex] = Math.max(0, state.walls[wallIndex] - wolf.attack);
+        const attackPower = wallIndex === 1 && state.terrainLevels[1] > 0 ? Math.max(1, wolf.attack - state.terrainLevels[1]) : wolf.attack;
+        if (wallIndex === 1 && attackPower !== wolf.attack) event.terrain.push({ type: 'mud', wolfId: wolf.id, ring: 1, level: state.terrainLevels[1] });
+        const actual = Math.min(attackPower, state.walls[wallIndex]);
+        state.walls[wallIndex] = Math.max(0, state.walls[wallIndex] - attackPower);
         event.attacked.push({ wolfId: wolf.id, ring: wallIndex, damage: actual });
         if (state.walls[wallIndex] === 0) {
           log(state, `第${wallIndex + 1}层防线被狼${wolf.id}拆穿！`, 'bad');
@@ -396,7 +600,7 @@
         wolf.ring++;
         log(state, `狼${wolf.id}穿过破口，进入${RING_NAMES[wolf.ring - 1]}。`, 'bad');
       } else {
-        const damage = wolf.attack;
+        const damage = wallIndex === 2 && state.terrainLevels[2] > 0 ? Math.max(1, wolf.attack - 1) : wolf.attack;
         state.house = Math.max(0, state.house - damage);
         event.damageHouse += damage;
         wolf.stunned = 1;
@@ -445,12 +649,14 @@
     if (completedTurn === 12 && state.mode === 'nightmare') {
       const boss = addWolf(state, 'heavy');
       boss.ring = 2;
-      boss.attack = 4;
+      boss.attack = Math.max(4, boss.attack);
       log(state, '第三夜，狼王提前钻进中圈！外婆：它恐怕学过微积分。', 'bad');
     }
     state.actions = state.maxActions;
     state.phase = 'question';
     state.question = makeQuestion(state);
+    state.timer = { phase: 'question', secondsLeft: 35 };
+    if (event.dawn && completedTurn < TOTAL_TURNS) setStoryPhase(state, state.night);
     state.lastDice = null;
     state.lastResult = null;
     state.selectedWolf = null;
@@ -467,10 +673,14 @@
     if (wolf.kind === 'sneak') return '钻地狼';
     return '野狼';
   }
+  function getWolfWeapon(wolf, turn, mode) {
+    if (wolf && wolf.weapon) return wolf.weapon;
+    return weaponProfile(wolf?.kind || 'wolf', nightOf(turn || 1), mode || 'easy').name;
+  }
 
   return {
-    TOTAL_TURNS, PER_NIGHT, RING_NAMES, MAX_WALLS, MAX_DEFENSE, DEFENSE_ITEMS, DICE_FACES,
-    newGame, migrateSave, makeQuestion, answerQuestion, rollDice, skipDice, takeAction, flashWolf, endTurn,
-    scoreLabel, getWolfName, nightOf
+    TOTAL_TURNS, PER_NIGHT, RING_NAMES, MAX_WALLS, MAX_DEFENSE, DEFENSE_ITEMS, DICE_FACES, TERRAIN_DEFS, INTERLUDE_STORIES,
+    newGame, migrateSave, makeQuestion, answerQuestion, rollDice, skipDice, takeAction, flashWolf, endTurn, continueStory,
+    scoreLabel, getWolfName, getWolfWeapon, nightOf
   };
 });

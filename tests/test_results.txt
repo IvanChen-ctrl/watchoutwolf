@@ -11,11 +11,14 @@ PASS flashlight is free action and target can never be flashed twice
 PASS distinct deterministic seeds create reproducible game and dice outcomes
 PASS browser integrity: direct flashlight overrides earlier selection, dice sectors align
 PASS math question generation in both modes never has negative options
+PASS math puzzles are mathematically correct across 18 rounds and difficulty tiers
+PASS save migration preserves RNG and original question and makes dogs harmless
+PASS wolf weapon strength increases only at later nights
 PASS full game ends in victory or legitimate loss, never frozen phase
-BALANCE easy accuracy= 1 wins= 200 /200 avgWinnerHouse= 14.6
-BALANCE easy accuracy= 0.7 wins= 200 /200 avgWinnerHouse= 13.9
-BALANCE nightmare accuracy= 1 wins= 200 /200 avgWinnerHouse= 12.0
-BALANCE nightmare accuracy= 0.7 wins= 195 /200 avgWinnerHouse= 11.1
+BALANCE easy accuracy= 1 wins= 200 /200 avgWinnerHouse= 14.4
+BALANCE easy accuracy= 0.7 wins= 199 /200 avgWinnerHouse= 13.0
+BALANCE nightmare accuracy= 1 wins= 168 /200 avgWinnerHouse= 8.4
+BALANCE nightmare accuracy= 0.7 wins= 145 /200 avgWinnerHouse= 9.3
 PASS version 1 saves upgrade without resetting seed, progress or wolves
 PASS defense catalogue has four distinct non-lethal equipment types
 PASS ice cream net consumes wood and coins, blocks two attack turns
@@ -24,4 +27,11 @@ PASS alarm stuns for two turns and enters a three-turn cooldown
 PASS equipment costs and capacity limits enforce no partial transaction
 PASS per-ring structures do not automatically work on the neighboring ring
 PASS non-lethal tower never damages or shoots a transformed Chihuahua
-Passed 22 engine test suites.
+Passed 25 engine test suites.
+PASS mobile: wrong answer -> optional dice skip -> engineering -> next round
+PASS direct flashlight targets clicked wolf and retreats exactly one ring
+PASS 320px mobile layout: no horizontal overflow / JS exceptions
+PASS dual-style swap retains same state, progress, and 320px viewport
+PASS level-3 fortress, 3-star math difficulty and drama-style drawing
+PASS construction UI: buy tower + net, ring isolation, action accounting
+PASS live effects: tower projectile + net trigger, no Canvas exceptions

@@ -52,3 +52,41 @@ body[data-style="drama"] .micro-tag{background:#70463e;color:#ffe0b9}
 body[data-style="drama"] .eyebrow{color:#c69e8a}
 @media(max-width:600px){.style-toolbar{gap:7px;padding:8px;flex-wrap:wrap}.style-copy{width:100%;justify-content:center}.style-segments{width:100%;justify-content:center}.style-segments button{flex:1;min-width:0}.intro-style-row{flex-direction:column;align-items:stretch;text-align:center}.intro-style-row>span{max-width:none}.scene-caption{font-size:9px;left:8%;right:8%;bottom:29px;padding:4px 7px}.caption-scene-tag{font-size:8px}.ring-arsenal{font-size:9px}.arsenal-legend{font-size:9px}}
 @media(max-width:365px){.style-copy span{font-size:9px}.style-segments button{font-size:11px;padding:7px}.scene-caption{font-size:8px}.build-group-label{font-size:11px}.build-group-label small{font-size:9px}}
+
+/* v1.3 additions: timer, manual save/load, interlude story, terrain meta */
+.timer-mini {
+  display:flex; align-items:center; gap:6px;
+  padding:8px 12px; border-radius:999px;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.08);
+  color:#ffe2a3; font-weight:800; letter-spacing:.02em;
+}
+.timer-mini.is-warning { color:#ffd17b; box-shadow:0 0 0 1px rgba(255,191,102,.32) inset; }
+.timer-mini.is-danger { color:#ff9d9d; box-shadow:0 0 0 1px rgba(255,122,122,.42) inset; animation:pulseWarn 1s ease-in-out infinite; }
+@keyframes pulseWarn { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.03);} }
+.story-card .story-lines { display:grid; gap:10px; margin:14px 0 18px; }
+.story-card .story-lines p { margin:0; line-height:1.6; color:var(--text-soft, #d5dcea); }
+.story-kicker { font-size:14px; color:#f4d3a0; margin:10px 0 6px; }
+.terrain-note { display:block; margin-top:4px; color:#b8c1d0; }
+.ring-terrain { margin-top:6px; color:#b7d3c8; font-size:12px; }
+@media (max-width: 720px) {
+  .header-actions { flex-wrap:wrap; justify-content:flex-end; }
+  .timer-mini { order: 3; }
+}
+
+.question-tags {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:10px;
+}
+.question-chip {
+  display:inline-flex;
+  align-items:center;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#e8d9b3;
+  font-size:12px;
+  font-weight:700;
+}

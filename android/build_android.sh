@@ -11,4 +11,4 @@ if [ -z "${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}" ]; then
 fi
 python3 ../tools/sync_web.py
 gradle --no-daemon :app:assembleDebug
-echo 'APK: android/app/build/outputs/apk/debug/app-debug.apk'
+echo 'APK: app/build/outputs/apk/debug/app-debug.apk'

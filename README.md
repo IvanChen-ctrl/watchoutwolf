@@ -1,4 +1,4 @@
-# 算数不好，狼就会来！ · WatchOutWolf v1.2.0
+# 算数不好，狼就会来！ · WatchOutWolf v1.5.0
 
 **同一款离线数学塔防游戏，两套可立即切换的视觉风格。** Windows / macOS 浏览器、iPhone Safari PWA、Android APK 使用相同的规则引擎与网页版 UI。
 
@@ -8,7 +8,7 @@
 
 外婆在家，女儿早已经到屋内，孙子随后一边走一边玩**唯一一台掌机**。床下藏着丑娘，她还记着女儿给过的冰淇淋，想报答。狼来袭时，孙子需要答对建材数学题来挣钱和修筑防线；答错可以放弃奖励或掷公平的六面命运骰，幸运得到的手电筒可以把狼照成吉娃娃，使其自动后退**一整圈**（最外圈退入森林）。游戏走惊悚冷幽默路线，不含真实赌博、流血或内购。
 
-## v1.2 双画风
+## 双画风
 
 **🧮 经典堡垒**：明亮易读的卡通 2D 城防地图，适合直接玩数学塔防。
 
@@ -46,7 +46,7 @@
 
 **iPhone Safari / iPad**：把 `web/` 部署到 HTTPS 静态站点。仓库已提供 `.github/workflows/publish-web.yml` 用于 GitHub Pages。启用 Settings → Pages → GitHub Actions，并在 Actions 中手动运行 `Publish iPhone and browser version to GitHub Pages`。Safari 打开部署后的 URL，使用分享 → 添加到主屏幕。安装后离线缓存可以游玩。
 
-**Android**：下载 GitHub Actions 的 `WatchOutWolf-Android-v1.2-debug-APK` 产物，解压安装 `app-debug.apk`（调试签名，仅测试）。可以在 Android Studio 中打开 `android/`。本地需求：JDK 17、Gradle 8.10.2、Android SDK 35 / Build Tools 35.0.0；在仓库根运行 `python3 tools/sync_web.py`，再运行 `gradle --project-dir android :app:assembleDebug`。
+**Android**：下载 GitHub Actions 的 `WatchOutWolf-Android-v1.5-debug-APK` 产物，解压安装 `app-debug.apk`（调试签名，仅测试）。可以在 Android Studio 中打开 `android/`。本地需求：JDK 17、Gradle 8.10.2、Android SDK 35 / Build Tools 35.0.0；在仓库根运行 `python3 tools/sync_web.py`，再运行 `gradle --project-dir android :app:assembleDebug`。
 
 包名 `com.moonfence.wolfmath`，Android 最低 API 24。Android 使用不请求联网权限的内置 WebView，离线加载 `assets/www`。未收集账号、无购买、无外部音频或 CDN。
 
@@ -68,6 +68,16 @@ tests/test_engine.cjs               确定性规则单元测试 + 800 场模拟
 
 运行 `node tests/test_engine.cjs` 和 `python3 tests/test_browser.py`（后者需 Playwright + Chromium）。每次发布前运行 `python3 tools/build_onefile.py` 重新生成 `web/play.html`，`python3 tools/sync_web.py` 与 Android 资产同步。测试结果见 `QA_REPORT.md`。
 
-**兼容性**：继续使用 v1.1 的存储 key，加载旧版 `version: 1` 存档时自动补充新装备字段，不丢失原回合、资源与狼状态；风格选择单独保存。若浏览器清空站点数据，存档仍可能丢失。
+**网页存档兼容性**：继续使用 v1.1 的存储 key，加载旧版 `version: 1` 存档时自动补充新装备字段，不丢失原回合、资源与狼状态；风格选择单独保存。若浏览器清空站点数据，存档仍可能丢失。
+
+**注意 Android 旧版升级**：每次云端 Debug APK 若使用不同的调试签名，Android 可能拒绝直接覆盖安装。若提示签名冲突，需要卸载旧 APK 后安装新版，而卸载可能清除本机游戏存档。未来正式发布需要配置固定且安全保管的签名证书。
 
 **验收边界**：仓库构建/本地自动化测试不等同于真实 Android / iPhone 实机验收。短剧风格不是原影片素材的逐帧复刻。正式上架还需发布签名及商店相关工作。
+
+
+## v1.5.0 本次回归
+
+- 数学题库、武器等级、两种画风及第三夜堡垒场景整合
+- 修正高难度题的负数边界；旧存档迁移不再消耗随机数状态；吉娃娃始终攻击 0
+- Android APK 版本为 `1.5.0`，通过 GitHub Actions 生成 Debug APK
+- 运行 `node tests/test_engine.cjs`、`python3 tests/test_browser.py` 进行回归
